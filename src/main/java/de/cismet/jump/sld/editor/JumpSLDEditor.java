@@ -221,14 +221,21 @@ public class JumpSLDEditor implements StyleDialogInterface {
         }
         
         for (final String ruleName : rules) {
+            BasicStyle bs = SLDImporter.getBasicStyle(ruleName, doc);
+            
+            //Do not convert a Style without a fill and line to a basic style
+            if (bs != null && !bs.isRenderingFill() && !bs.isRenderingLine()) {
+                bs = null;
+            }
+            
             setStyle(
                     layer,
-                    (cts != null) ? null : SLDImporter.getBasicStyle(ruleName, doc),
+                    (cts != null) ? null : bs,
                     SLDImporter.getVertexStyle(ruleName, doc),
                     SLDImporter.getLabelStyle(ruleName, doc),
                     cts);
         }
-            }
+    }
             
     /**
      * DOCUMENT ME!
