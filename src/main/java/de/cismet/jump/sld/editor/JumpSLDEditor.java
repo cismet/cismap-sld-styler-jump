@@ -56,8 +56,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -82,6 +80,8 @@ import de.cismet.cismap.commons.features.FeatureServiceFeature;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.style.StyleDialogInterface;
 import de.cismet.cismap.commons.gui.MappingComponent;
+import java.io.StringReader;
+import java.io.StringWriter;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.xml.xpath.XPathExpressionException;
@@ -219,7 +219,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
         if (colorThemeStyles.size() != 0) {
             cts = colorThemeStyles.peek();
         }
-
+        
         for (final String ruleName : rules) {
             setStyle(
                     layer,
@@ -228,8 +228,8 @@ public class JumpSLDEditor implements StyleDialogInterface {
                     SLDImporter.getLabelStyle(ruleName, doc),
                     cts);
         }
-    }
-
+            }
+            
     /**
      * DOCUMENT ME!
      *
@@ -524,12 +524,11 @@ public class JumpSLDEditor implements StyleDialogInterface {
         String sld = null;
         try {
             final Java2XML java2Xml = new Java2XML();
-            final File tempFile = File.createTempFile("layer", ".xml");
-
+//            final File tempFile = File.createTempFile("layer", ".xml");
+            final StringWriter xmlWriter = new StringWriter();
             final Geometry geom = firstFeature.getGeometry();
-            // String geomProperty =
 
-            java2Xml.write(layer, "layer", tempFile);
+            java2Xml.write(layer, "layer", xmlWriter);
             final HashMap<String, String> params = new HashMap<String, String>();
             params.put("wmsLayerName", service.getName());
             params.put("featureTypeStyle", service.getName());
@@ -546,7 +545,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
                 params.put("minScale", "" + layer.getMaxScale());
             }
 
-            sld = LayerStyle2SLDPlugIn.transformContext(new FileInputStream(tempFile), params);
+            sld = LayerStyle2SLDPlugIn.transformContext(new StringReader(xmlWriter.toString()), params);
         } catch (Exception e) {
             logger.info("could not save sld definition", e);
         }
