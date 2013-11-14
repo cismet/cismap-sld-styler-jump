@@ -182,6 +182,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
             try {
                 Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+rules.peek()+"']/sld:MinScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
                 Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+rules.peek()+"']/sld:MaxScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
+                //NOTE: layer.setMaxScale() saves the MinScaleDenominator and vice versa
                 if(minElement != null) {
                     Double max = new Double(minElement.getTextContent());
                     if(max.doubleValue() > 0)
@@ -220,7 +221,50 @@ public class JumpSLDEditor implements StyleDialogInterface {
             cts = colorThemeStyles.peek();
         }
         
+        Double totalMax = null;
+        Double totalMin = null;
+
         for (final String ruleName : rules) {
+            //check the min/max scale
+            if (!ruleName.equals("labelStyle")) {
+                try {
+                    Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+ruleName+"']/sld:MinScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
+                    Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+ruleName+"']/sld:MaxScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
+
+                    if(maxElement != null) {
+                        Double max = new Double(maxElement.getTextContent());
+                        if(max.doubleValue() > 0) {
+                            if (totalMax == null) {
+                                totalMax = max;
+                            } else if (totalMax > 0){
+                                if (!totalMax.equals(max)) {
+                                    totalMax = -1.0;
+                                }
+                            }
+                        }
+                    } else {
+                        totalMax = -1.0;
+                    }
+
+                    if(minElement != null) {
+                        Double min = new Double(minElement.getTextContent());
+
+                        if(min.doubleValue() > 0) {
+                            if (totalMin == null) {
+                                totalMin = min;
+                            } else if (totalMin > 0){
+                                if (!totalMin.equals(min)) {
+                                    totalMin = -1.0;
+                                }
+                            }
+                        }
+                    } else {
+                        totalMin = -1.0;
+                    }
+                } catch (XPathExpressionException ex) {
+                    logger.warn("XPath exception", ex);
+                }
+            }
             BasicStyle bs = SLDImporter.getBasicStyle(ruleName, doc);
             
             //Do not convert a Style without a fill and line to a basic style
@@ -234,6 +278,20 @@ public class JumpSLDEditor implements StyleDialogInterface {
                     SLDImporter.getVertexStyle(ruleName, doc),
                     SLDImporter.getLabelStyle(ruleName, doc),
                     cts);
+        }
+        
+        // The scale can be used, if every rule have the same scale
+        // NOTE: layer.setMaxScale() saves the MinScaleDenominator and vice versa
+        if ((totalMax != null && totalMax > 0) || (totalMin != null && totalMin > 0)) {
+            layer.setScaleDependentRenderingEnabled(true);
+            
+            if (totalMax != null && totalMax > 0) {
+                layer.setMinScale(totalMax);
+            }
+            
+            if (totalMin != null && totalMin > 0) {
+                layer.setMaxScale(totalMin);
+            }
         }
     }
             
