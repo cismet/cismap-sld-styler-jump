@@ -1,12 +1,10 @@
-/**
- * *************************************************
- *
- * cismet GmbH, Saarbruecken, Germany
- * 
-* ... and it just works.
- * 
-***************************************************
- */
+/***************************************************
+*
+* cismet GmbH, Saarbruecken, Germany
+*
+*              ... and it just works.
+*
+****************************************************/
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -42,11 +40,14 @@ import com.vividsolutions.jump.workbench.ui.style.StylePanel;
 import de.latlon.deejump.plugin.style.DeeRenderingStylePanel;
 import de.latlon.deejump.plugin.style.LayerStyle2SLDPlugIn;
 
+import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 
 import org.openjump.util.SLDImporter;
+import org.openjump.util.XPathUtils;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -58,6 +59,8 @@ import java.awt.Frame;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,36 +74,33 @@ import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
 
 import de.cismet.cismap.commons.features.FeatureServiceFeature;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.style.StyleDialogInterface;
 import de.cismet.cismap.commons.gui.MappingComponent;
-import java.io.StringReader;
-import java.io.StringWriter;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.xml.xpath.XPathExpressionException;
-import org.openide.util.Exceptions;
-import org.openjump.util.XPathUtils;
-import org.w3c.dom.Element;
 
 /**
  * DOCUMENT ME!
  *
- * @author mroncoroni
- * @version $Revision$, $Date$
+ * @author   mroncoroni
+ * @version  $Revision$, $Date$
  */
 @ServiceProvider(
-        service = StyleDialogInterface.class,
-        position = 1)
+    service = StyleDialogInterface.class,
+    position = 1
+)
 public class JumpSLDEditor implements StyleDialogInterface {
 
     //~ Instance fields --------------------------------------------------------
+
     private final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(this.getClass());
     private MultiInputDialog dialog;
     private Layer layer;
@@ -111,14 +111,15 @@ public class JumpSLDEditor implements StyleDialogInterface {
     private JTabbedPane tabbedPane;
 
     //~ Methods ----------------------------------------------------------------
+
     /**
      * DOCUMENT ME!
      *
-     * @param l DOCUMENT ME!
-     * @param bs DOCUMENT ME!
-     * @param vs DOCUMENT ME!
-     * @param ls DOCUMENT ME!
-     * @param cts DOCUMENT ME!
+     * @param  l    DOCUMENT ME!
+     * @param  bs   DOCUMENT ME!
+     * @param  vs   DOCUMENT ME!
+     * @param  ls   DOCUMENT ME!
+     * @param  cts  DOCUMENT ME!
      */
     public void setStyle(final Layer l,
             final BasicStyle bs,
@@ -152,7 +153,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
         }
         if (cts != null) {
             try {
-                cts.setDefaultStyle((BasicStyle) cts.getAttributeValueToBasicStyleMap().values().iterator().next());
+                cts.setDefaultStyle((BasicStyle)cts.getAttributeValueToBasicStyleMap().values().iterator().next());
                 cts.setEnabled(true);
                 oldStyle = l.getStyle(ColorThemingStyle.class);
                 if (oldStyle != null) {
@@ -168,8 +169,8 @@ public class JumpSLDEditor implements StyleDialogInterface {
     /**
      * DOCUMENT ME!
      *
-     * @param doc DOCUMENT ME!
-     * @param layer DOCUMENT ME!
+     * @param  doc    DOCUMENT ME!
+     * @param  layer  DOCUMENT ME!
      */
     public void importSLD(final Document doc, final Layer layer) {
         final LinkedList<String> rules = SLDImporter.getRuleNames(doc);
@@ -180,31 +181,39 @@ public class JumpSLDEditor implements StyleDialogInterface {
 
         if (rules.size() == 1) {
             try {
-                Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+rules.peek()+"']/sld:MinScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
-                Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+rules.peek()+"']/sld:MaxScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
-                //NOTE: layer.setMaxScale() saves the MinScaleDenominator and vice versa
-                if(minElement != null) {
-                    Double max = new Double(minElement.getTextContent());
-                    if(max.doubleValue() > 0)
+                final Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + rules.peek()
+                                + "']/sld:MinScaleDenominator",
+                        doc.getDocumentElement(),
+                        SLDImporter.NSCONTEXT);
+                final Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + rules.peek()
+                                + "']/sld:MaxScaleDenominator",
+                        doc.getDocumentElement(),
+                        SLDImporter.NSCONTEXT);
+                // NOTE: layer.setMaxScale() saves the MinScaleDenominator and vice versa
+                if (minElement != null) {
+                    final Double max = new Double(minElement.getTextContent());
+                    if (max.doubleValue() > 0) {
                         layer.setMaxScale(max);
+                    }
                 }
-                if(maxElement != null) {
-                    Double min = new Double(maxElement.getTextContent());
-                    if(min.doubleValue() > 0)
+                if (maxElement != null) {
+                    final Double min = new Double(maxElement.getTextContent());
+                    if (min.doubleValue() > 0) {
                         layer.setMinScale(min);
+                    }
                 }
-                if(minElement != null || maxElement != null) {
+                if ((minElement != null) || (maxElement != null)) {
                     layer.setScaleDependentRenderingEnabled(true);
                 }
             } catch (XPathExpressionException ex) {
                 Exceptions.printStackTrace(ex);
             }
             setStyle(
-                    layer,
-                    SLDImporter.getBasicStyle(rules.peek(), doc),
-                    SLDImporter.getVertexStyle(rules.peek(), doc),
-                    SLDImporter.getLabelStyle(rules.peek(), doc),
-                    SLDImporter.getColorThemingStyle(rules.peek(), doc));
+                layer,
+                SLDImporter.getBasicStyle(rules.peek(), doc),
+                SLDImporter.getVertexStyle(rules.peek(), doc),
+                SLDImporter.getLabelStyle(rules.peek(), doc),
+                SLDImporter.getColorThemingStyle(rules.peek(), doc));
             return;
         }
 
@@ -220,23 +229,29 @@ public class JumpSLDEditor implements StyleDialogInterface {
         if (colorThemeStyles.size() != 0) {
             cts = colorThemeStyles.peek();
         }
-        
+
         Double totalMax = null;
         Double totalMin = null;
 
         for (final String ruleName : rules) {
-            //check the min/max scale
+            // check the min/max scale
             if (!ruleName.equals("labelStyle")) {
                 try {
-                    Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+ruleName+"']/sld:MinScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
-                    Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='"+ruleName+"']/sld:MaxScaleDenominator", doc.getDocumentElement(), SLDImporter.NSCONTEXT);
+                    final Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
+                                    + "']/sld:MinScaleDenominator",
+                            doc.getDocumentElement(),
+                            SLDImporter.NSCONTEXT);
+                    final Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
+                                    + "']/sld:MaxScaleDenominator",
+                            doc.getDocumentElement(),
+                            SLDImporter.NSCONTEXT);
 
-                    if(maxElement != null) {
-                        Double max = new Double(maxElement.getTextContent());
-                        if(max.doubleValue() > 0) {
+                    if (maxElement != null) {
+                        final Double max = new Double(maxElement.getTextContent());
+                        if (max.doubleValue() > 0) {
                             if (totalMax == null) {
                                 totalMax = max;
-                            } else if (totalMax > 0){
+                            } else if (totalMax > 0) {
                                 if (!totalMax.equals(max)) {
                                     totalMax = -1.0;
                                 }
@@ -246,13 +261,13 @@ public class JumpSLDEditor implements StyleDialogInterface {
                         totalMax = -1.0;
                     }
 
-                    if(minElement != null) {
-                        Double min = new Double(minElement.getTextContent());
+                    if (minElement != null) {
+                        final Double min = new Double(minElement.getTextContent());
 
-                        if(min.doubleValue() > 0) {
+                        if (min.doubleValue() > 0) {
                             if (totalMin == null) {
                                 totalMin = min;
-                            } else if (totalMin > 0){
+                            } else if (totalMin > 0) {
                                 if (!totalMin.equals(min)) {
                                     totalMin = -1.0;
                                 }
@@ -266,211 +281,217 @@ public class JumpSLDEditor implements StyleDialogInterface {
                 }
             }
             BasicStyle bs = SLDImporter.getBasicStyle(ruleName, doc);
-            
-            //Do not convert a Style without a fill and line to a basic style
-            if (bs != null && !bs.isRenderingFill() && !bs.isRenderingLine()) {
+
+            // Do not convert a Style without a fill and line to a basic style
+            if ((bs != null) && !bs.isRenderingFill() && !bs.isRenderingLine()) {
                 bs = null;
             }
-            
+
             setStyle(
-                    layer,
-                    (cts != null) ? null : bs,
-                    SLDImporter.getVertexStyle(ruleName, doc),
-                    SLDImporter.getLabelStyle(ruleName, doc),
-                    cts);
+                layer,
+                (cts != null) ? null : bs,
+                SLDImporter.getVertexStyle(ruleName, doc),
+                SLDImporter.getLabelStyle(ruleName, doc),
+                cts);
         }
-        
+
         // The scale can be used, if every rule have the same scale
         // NOTE: layer.setMaxScale() saves the MinScaleDenominator and vice versa
-        if ((totalMax != null && totalMax > 0) || (totalMin != null && totalMin > 0)) {
+        if (((totalMax != null) && (totalMax > 0)) || ((totalMin != null) && (totalMin > 0))) {
             layer.setScaleDependentRenderingEnabled(true);
-            
-            if (totalMax != null && totalMax > 0) {
+
+            if ((totalMax != null) && (totalMax > 0)) {
                 layer.setMinScale(totalMax);
             }
-            
-            if (totalMin != null && totalMin > 0) {
+
+            if ((totalMin != null) && (totalMin > 0)) {
                 layer.setMaxScale(totalMin);
             }
         }
     }
-            
+
     /**
      * DOCUMENT ME!
      *
-     * @param featureService DOCUMENT ME!
-     * @param parentFrame DOCUMENT ME!
-     * @param mappingComponent DOCUMENT ME!
+     * @param   featureService    DOCUMENT ME!
+     * @param   parentFrame       DOCUMENT ME!
+     * @param   mappingComponent  DOCUMENT ME!
+     * @param   configTabs        DOCUMENT ME!
      *
-     * @return DOCUMENT ME!
+     * @return  DOCUMENT ME!
      *
-     * @throws UnsupportedOperationException DOCUMENT ME!
+     * @throws  UnsupportedOperationException  DOCUMENT ME!
      */
     @Override
-    public JDialog configureDialog(AbstractFeatureService featureService, Frame parentFrame, MappingComponent mappingComponent, ArrayList<String> configTabs) {
+    public JDialog configureDialog(final AbstractFeatureService featureService,
+            final Frame parentFrame,
+            final MappingComponent mappingComponent,
+            final ArrayList<String> configTabs) {
         stylePanels.clear();
         final Blackboard blackboard = new Blackboard();
         final WorkbenchContext workbenchContext = new WorkbenchContext() {
-            @Override
-            public Blackboard getBlackboard() {
-                return blackboard; // To change body of generated methods, choose Tools | Templates.
-            }
-        };
+
+                @Override
+                public Blackboard getBlackboard() {
+                    return blackboard; // To change body of generated methods, choose Tools | Templates.
+                }
+            };
         service = featureService;
         final FeatureSchema featureSchema = new FeatureSchema();
         final List<FeatureServiceFeature> featureList = featureService.getFeatureFactory().getLastCreatedFeatures();
-        firstFeature = ((FeatureServiceFeature) featureList.get(0));
+        firstFeature = ((FeatureServiceFeature)featureList.get(0));
         final HashMap props = firstFeature.getProperties();
         AttributeType type;
         geomProperty = "GEOM";
         for (final Object entry : props.entrySet()) {
-            if (((Map.Entry) entry).getValue() instanceof Geometry) {
+            if (((Map.Entry)entry).getValue() instanceof Geometry) {
                 type = AttributeType.GEOMETRY;
-                geomProperty = (String) ((Map.Entry) entry).getKey();
-            } else if (((Map.Entry) entry).getValue() instanceof String) {
+                geomProperty = (String)((Map.Entry)entry).getKey();
+            } else if (((Map.Entry)entry).getValue() instanceof String) {
                 type = AttributeType.STRING;
-            } else if (((Map.Entry) entry).getValue() instanceof Integer) {
+            } else if (((Map.Entry)entry).getValue() instanceof Integer) {
                 type = AttributeType.INTEGER;
-            } else if (((Map.Entry) entry).getValue() instanceof Long) {
+            } else if (((Map.Entry)entry).getValue() instanceof Long) {
                 type = AttributeType.INTEGER;
-            } else if (((Map.Entry) entry).getValue() instanceof Double) {
+            } else if (((Map.Entry)entry).getValue() instanceof Double) {
                 type = AttributeType.DOUBLE;
-            } else if (((Map.Entry) entry).getValue() instanceof Float) {
+            } else if (((Map.Entry)entry).getValue() instanceof Float) {
                 type = AttributeType.DOUBLE;
-            } else if (((Map.Entry) entry).getValue() instanceof Date) {
+            } else if (((Map.Entry)entry).getValue() instanceof Date) {
                 type = AttributeType.DATE;
-            } else if (((Map.Entry) entry).getValue() instanceof java.sql.Date) {
+            } else if (((Map.Entry)entry).getValue() instanceof java.sql.Date) {
                 type = AttributeType.DATE;
             } else {
                 type = AttributeType.OBJECT;
             }
-            featureSchema.addAttribute(((Map.Entry) entry).getKey().toString(), type);
+            featureSchema.addAttribute(((Map.Entry)entry).getKey().toString(), type);
         }
         final List<Feature> jumpFeatures = new LinkedList<Feature>();
         for (final FeatureServiceFeature feature : featureList) {
             jumpFeatures.add(new Feature() {
-                @Override
-                public void setAttributes(final Object[] attributes) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
 
-                @Override
-                public void setSchema(final FeatureSchema schema) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public void setAttributes(final Object[] attributes) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public int getID() {
-                    return feature.getId();
-                }
+                    @Override
+                    public void setSchema(final FeatureSchema schema) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public void setAttribute(final int attributeIndex, final Object newAttribute) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public int getID() {
+                        return feature.getId();
+                    }
 
-                @Override
-                public void setAttribute(final String attributeName, final Object newAttribute) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public void setAttribute(final int attributeIndex, final Object newAttribute) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public void setGeometry(final Geometry geometry) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public void setAttribute(final String attributeName, final Object newAttribute) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public Object getAttribute(final int i) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public void setGeometry(final Geometry geometry) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public Object getAttribute(final String name) {
-                    return feature.getProperty(name);
-                }
+                    @Override
+                    public Object getAttribute(final int i) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public String getString(final int attributeIndex) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public Object getAttribute(final String name) {
+                        return feature.getProperty(name);
+                    }
 
-                @Override
-                public int getInteger(final int attributeIndex) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public String getString(final int attributeIndex) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public double getDouble(final int attributeIndex) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public int getInteger(final int attributeIndex) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public String getString(final String attributeName) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public double getDouble(final int attributeIndex) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public Geometry getGeometry() {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public String getString(final String attributeName) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public FeatureSchema getSchema() {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public Geometry getGeometry() {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public Feature clone(final boolean deep) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public FeatureSchema getSchema() {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public Object[] getAttributes() {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public Feature clone(final boolean deep) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public int compareTo(final Object o) {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
+                    @Override
+                    public Object[] getAttributes() {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
 
-                @Override
-                public Object clone() {
-                    throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
-                    // methods, choose Tools |
-                    // Templates.
-                }
-            });
+                    @Override
+                    public int compareTo(final Object o) {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
+
+                    @Override
+                    public Object clone() {
+                        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated
+                        // methods, choose Tools |
+                        // Templates.
+                    }
+                });
         }
         final FeatureCollection features = new FeatureDataset(jumpFeatures, featureSchema);
         final LayerManager layerManager = new LayerManager();
@@ -500,7 +521,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
         dialog.setSideBarDescription(I18N.get(
                 "ui.style.ChangeStylesPlugIn.you-can-use-this-dialog-to-change-the-colour-line-width"));
         if (configTabs.contains("Allgemein")) {
-            AllgemeinPanel allgemein = new AllgemeinPanel(service);
+            final AllgemeinPanel allgemein = new AllgemeinPanel(service);
             stylePanels.add(allgemein);
         }
         DeeRenderingStylePanel renderingStylePanel = null;
@@ -515,11 +536,14 @@ public class JumpSLDEditor implements StyleDialogInterface {
 
         if (configTabs.contains("Thematische Farbgebung")) {
             if (featureSchema.getAttributeCount() > 1) {
-                final ColorThemingStylePanel colorThemingStylePanel = new ColorThemingStylePanel(layer, workbenchContext);
+                final ColorThemingStylePanel colorThemingStylePanel = new ColorThemingStylePanel(
+                        layer,
+                        workbenchContext);
                 colorThemingStylePanel.setPreferredSize(new Dimension(400, 300));
                 stylePanels.add(colorThemingStylePanel);
                 if (configTabs.contains("Darstellung")) {
-                    GUIUtil.sync(renderingStylePanel.getTransparencySlider(), colorThemingStylePanel.getTransparencySlider());
+                    GUIUtil.sync(renderingStylePanel.getTransparencySlider(),
+                        colorThemingStylePanel.getTransparencySlider());
                 }
             } else {
                 stylePanels.add(new DummyColorThemingStylePanel());
@@ -535,7 +559,6 @@ public class JumpSLDEditor implements StyleDialogInterface {
         }
         SLDDefinitionPanel definitonPanel = null;
         if (configTabs.contains("TextEditor")) {
-
             definitonPanel = new SLDDefinitionPanel();
             stylePanels.add(definitonPanel);
         }
@@ -544,30 +567,33 @@ public class JumpSLDEditor implements StyleDialogInterface {
 
         for (final Iterator<StylePanel> i = stylePanels.iterator(); i.hasNext();) {
             final StylePanel stylePanel = i.next();
-            tabbedPane.add((Component) stylePanel, stylePanel.getTitle());
+            tabbedPane.add((Component)stylePanel, stylePanel.getTitle());
             dialog.addEnableChecks(stylePanel.getTitle(),
-                    Arrays.asList(
-                    new EnableCheck[]{
-                new EnableCheck() {
-                    @Override
-                    public String check(final JComponent component) {
-                        return stylePanel.validateInput();
-                    }
-                }
-            }));
+                Arrays.asList(
+                    new EnableCheck[] {
+                        new EnableCheck() {
+
+                            @Override
+                            public String check(final JComponent component) {
+                                return stylePanel.validateInput();
+                            }
+                        }
+                    }));
         }
 
         if (configTabs.contains("TextEditor")) {
             final SLDDefinitionPanel panel = definitonPanel;
             tabbedPane.addChangeListener(new ChangeListener() {
-                public void stateChanged(ChangeEvent e) {
-                    for (Iterator<StylePanel> i = stylePanels.iterator(); i.hasNext();) {
-                        StylePanel stylePanel = i.next();
-                        stylePanel.updateStyles();
+
+                    @Override
+                    public void stateChanged(final ChangeEvent e) {
+                        for (final Iterator<StylePanel> i = stylePanels.iterator(); i.hasNext();) {
+                            final StylePanel stylePanel = i.next();
+                            stylePanel.updateStyles();
+                        }
+                        panel.setSLDString(exportSLD());
                     }
-                    panel.setSLDString(exportSLD());
-                }
-            });
+                });
         }
 
         // mappingComponent.reconsiderFeature(null);
@@ -585,6 +611,11 @@ public class JumpSLDEditor implements StyleDialogInterface {
         return dialog.wasOKPressed();
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     protected String exportSLD() {
         String sld = null;
         try {
@@ -620,11 +651,12 @@ public class JumpSLDEditor implements StyleDialogInterface {
     @Override
     public Runnable createResultTask() {
         return new Runnable() {
-            @Override
-            public void run() {
-                // final Collection<?> oldStyles = layer.cloneStyles();
 
-                //J-
+                @Override
+                public void run() {
+                    // final Collection<?> oldStyles = layer.cloneStyles();
+
+                    //J-
                 layer.getLayerManager().deferFiringEvents(new Runnable() {
                     @Override
                     public void run() {
@@ -645,20 +677,21 @@ public class JumpSLDEditor implements StyleDialogInterface {
                         }
                     }
                 });
-                //J+
+                    //J+
 
-                String sld;
-                if(tabbedPane.getSelectedComponent() instanceof SLDDefinitionPanel) {
-                    sld = ((SLDDefinitionPanel)tabbedPane.getSelectedComponent()).getSLDString();
-                } else {
-                    sld = exportSLD();
+                    String sld;
+                    if (tabbedPane.getSelectedComponent() instanceof SLDDefinitionPanel) {
+                        sld = ((SLDDefinitionPanel)tabbedPane.getSelectedComponent()).getSLDString();
+                    } else {
+                        sld = exportSLD();
+                    }
+                    service.setSLDInputStream(sld);
+                    service.refreshFeatures();
                 }
-                service.setSLDInputStream(sld);
-                service.refreshFeatures();
-            }
-        };
+            };
     }
 
+    @Override
     public String getKey() {
         return "Jump";
     }

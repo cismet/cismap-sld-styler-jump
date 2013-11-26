@@ -50,9 +50,19 @@ public class CidsLabelStylePanel extends LabelStylePanel {
         this.remove(previewPanel);
         this.remove(outlineButtonPanel);
         this.remove(showOutlineCheckBox);
-        this.add(new JPanel(), new GridBagConstraints(0, 14, 2, 1, 0.0, 0.0,
-                GridBagConstraints.WEST, GridBagConstraints.NONE,
-                new Insets(190, 0, 0, 0), 0, 0));
+        this.add(new JPanel(),
+            new GridBagConstraints(
+                0,
+                14,
+                2,
+                1,
+                0.0,
+                0.0,
+                GridBagConstraints.WEST,
+                GridBagConstraints.NONE,
+                new Insets(190, 0, 0, 0),
+                0,
+                0));
 //        previewPanel = new JPanel() {
 //
 //                @Override
@@ -82,6 +92,6 @@ public class CidsLabelStylePanel extends LabelStylePanel {
 //        this.add(previewLabel,
 //            new GridBagConstraints(0, 14, 2, 1, 0.0, 0.0,
 //                GridBagConstraints.WEST, GridBagConstraints.NONE,
-//                new Insets(15, 0, 0, 0), 0, 0));        
+//                new Insets(15, 0, 0, 0), 0, 0));
     }
 }
