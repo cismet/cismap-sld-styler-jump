@@ -14,6 +14,8 @@ package de.cismet.jump.sld.editor;
 import com.vividsolutions.jump.workbench.ui.style.StylePanel;
 
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
+import de.cismet.cismap.commons.featureservice.DocumentFeatureService;
+import de.cismet.cismap.commons.featureservice.WebFeatureService;
 
 /**
  * DOCUMENT ME!
@@ -27,8 +29,10 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
 
     AbstractFeatureService service;
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JLabel lblName;
+    private javax.swing.JLabel lblSource;
+    private javax.swing.JTextField txtName;
+    private javax.swing.JTextField txtSource;
     // End of variables declaration//GEN-END:variables
 
     //~ Constructors -----------------------------------------------------------
@@ -41,7 +45,19 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
     public AllgemeinPanel(final AbstractFeatureService service) {
         this.service = service;
         initComponents();
-        jTextField1.setText(service.getName());
+        txtName.setText(service.getName());
+        txtSource.setEditable(false);
+        
+        if (service instanceof DocumentFeatureService) {
+            String source = ((DocumentFeatureService)service).getDocumentURI().toString();
+            txtSource.setText(source);
+        } else if (service instanceof WebFeatureService) {
+            String source = ((WebFeatureService)service).getHostname();
+            txtSource.setText(source);
+        } else {
+            txtSource.setVisible(false);
+            lblSource.setVisible(false);
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -55,24 +71,43 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
-        jTextField1 = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
+        txtName = new javax.swing.JTextField();
+        lblName = new javax.swing.JLabel();
+        txtSource = new javax.swing.JTextField();
+        lblSource = new javax.swing.JLabel();
 
         setLayout(new java.awt.GridBagLayout());
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.ipadx = 53;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
+        add(txtName, gridBagConstraints);
 
-        jTextField1.setText(org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.jTextField1.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(lblName, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblName.text")); // NOI18N
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 5);
+        add(lblName, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.ipadx = 53;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        add(jTextField1, gridBagConstraints);
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
+        add(txtSource, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.jLabel1.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(lblSource, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSource.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        add(jLabel1, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 5);
+        add(lblSource, gridBagConstraints);
     }// </editor-fold>//GEN-END:initComponents
 
     @Override
@@ -82,7 +117,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
 
     @Override
     public void updateStyles() {
-        service.setName(jTextField1.getText());
+        service.setName(txtName.getText());
     }
 
     @Override
