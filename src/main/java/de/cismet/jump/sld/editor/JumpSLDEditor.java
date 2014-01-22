@@ -40,6 +40,9 @@ import com.vividsolutions.jump.workbench.ui.style.StylePanel;
 import de.latlon.deejump.plugin.style.DeeRenderingStylePanel;
 import de.latlon.deejump.plugin.style.LayerStyle2SLDPlugIn;
 
+import org.deegree.datatypes.Types;
+import org.deegree.model.feature.FeatureProperty;
+
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -67,6 +70,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +88,7 @@ import javax.xml.xpath.XPathExpressionException;
 
 import de.cismet.cismap.commons.features.FeatureServiceFeature;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
+import de.cismet.cismap.commons.featureservice.FeatureServiceAttribute;
 import de.cismet.cismap.commons.featureservice.style.StyleDialogInterface;
 import de.cismet.cismap.commons.gui.MappingComponent;
 
@@ -339,31 +344,71 @@ public class JumpSLDEditor implements StyleDialogInterface {
         service = featureService;
         final FeatureSchema featureSchema = new FeatureSchema();
         final List<FeatureServiceFeature> featureList = featureService.getFeatureFactory().getLastCreatedFeatures();
-        firstFeature = ((FeatureServiceFeature)featureList.get(0));
-        final HashMap props = firstFeature.getProperties();
+        if (featureList.size() > 0) {
+            firstFeature = ((FeatureServiceFeature)featureList.get(0));
+        }
+        Map props;
+        boolean useFeature = true;
+
+        if (firstFeature != null) {
+            props = firstFeature.getProperties();
+        } else {
+            props = featureService.getFeatureServiceAttributes();
+            useFeature = false;
+        }
+
         AttributeType type;
         geomProperty = "GEOM";
         for (final Object entry : props.entrySet()) {
-            if (((Map.Entry)entry).getValue() instanceof Geometry) {
-                type = AttributeType.GEOMETRY;
-                geomProperty = (String)((Map.Entry)entry).getKey();
-            } else if (((Map.Entry)entry).getValue() instanceof String) {
-                type = AttributeType.STRING;
-            } else if (((Map.Entry)entry).getValue() instanceof Integer) {
-                type = AttributeType.INTEGER;
-            } else if (((Map.Entry)entry).getValue() instanceof Long) {
-                type = AttributeType.INTEGER;
-            } else if (((Map.Entry)entry).getValue() instanceof Double) {
-                type = AttributeType.DOUBLE;
-            } else if (((Map.Entry)entry).getValue() instanceof Float) {
-                type = AttributeType.DOUBLE;
-            } else if (((Map.Entry)entry).getValue() instanceof Date) {
-                type = AttributeType.DATE;
-            } else if (((Map.Entry)entry).getValue() instanceof java.sql.Date) {
-                type = AttributeType.DATE;
+            if (useFeature) {
+                if (((Map.Entry)entry).getValue() instanceof Geometry) {
+                    type = AttributeType.GEOMETRY;
+                    geomProperty = (String)((Map.Entry)entry).getKey();
+                } else if (((Map.Entry)entry).getValue() instanceof String) {
+                    type = AttributeType.STRING;
+                } else if (((Map.Entry)entry).getValue() instanceof Integer) {
+                    type = AttributeType.INTEGER;
+                } else if (((Map.Entry)entry).getValue() instanceof Long) {
+                    type = AttributeType.INTEGER;
+                } else if (((Map.Entry)entry).getValue() instanceof Double) {
+                    type = AttributeType.DOUBLE;
+                } else if (((Map.Entry)entry).getValue() instanceof Float) {
+                    type = AttributeType.DOUBLE;
+                } else if (((Map.Entry)entry).getValue() instanceof Date) {
+                    type = AttributeType.DATE;
+                } else if (((Map.Entry)entry).getValue() instanceof java.sql.Date) {
+                    type = AttributeType.DATE;
+                } else {
+                    type = AttributeType.OBJECT;
+                }
             } else {
-                type = AttributeType.OBJECT;
+                final FeatureServiceAttribute attr = (FeatureServiceAttribute)((Map.Entry)entry).getValue();
+
+                if (attr.isGeometry()) {
+                    type = AttributeType.GEOMETRY;
+                    geomProperty = (String)((Map.Entry)entry).getKey();
+                } else if (attr.getType().equals(String.valueOf(Types.CHAR))
+                            || attr.getType().equals(String.valueOf(Types.VARCHAR))
+                            || attr.getType().equals(String.valueOf(Types.LONGVARCHAR))) {
+                    type = AttributeType.STRING;
+                } else if (attr.getType().equals(String.valueOf(Types.INTEGER))
+                            || attr.getType().equals(String.valueOf(Types.BIGINT))
+                            || attr.getType().equals(String.valueOf(Types.SMALLINT))
+                            || attr.getType().equals(String.valueOf(Types.TINYINT))) {
+                    type = AttributeType.INTEGER;
+                } else if (attr.getType().equals(String.valueOf(Types.DOUBLE))
+                            || attr.getType().equals(String.valueOf(Types.FLOAT))
+                            || attr.getType().equals(String.valueOf(Types.DECIMAL))) {
+                    type = AttributeType.DOUBLE;
+                } else if (attr.getType().equals(String.valueOf(Types.DATE))
+                            || attr.getType().equals(String.valueOf(Types.TIME))
+                            || attr.getType().equals(String.valueOf(Types.TIMESTAMP))) {
+                    type = AttributeType.DATE;
+                } else {
+                    type = AttributeType.OBJECT;
+                }
             }
+
             featureSchema.addAttribute(((Map.Entry)entry).getKey().toString(), type);
         }
         final List<Feature> jumpFeatures = new LinkedList<Feature>();
