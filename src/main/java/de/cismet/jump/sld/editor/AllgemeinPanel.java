@@ -47,12 +47,12 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         initComponents();
         txtName.setText(service.getName());
         txtSource.setEditable(false);
-        
+
         if (service instanceof DocumentFeatureService) {
-            String source = ((DocumentFeatureService)service).getDocumentURI().toString();
+            final String source = ((DocumentFeatureService)service).getDocumentURI().toString();
             txtSource.setText(source);
         } else if (service instanceof WebFeatureService) {
-            String source = ((WebFeatureService)service).getHostname();
+            final String source = ((WebFeatureService)service).getHostname();
             txtSource.setText(source);
         } else {
             txtSource.setVisible(false);
@@ -86,7 +86,9 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
         add(txtName, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(lblName, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblName.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(
+            lblName,
+            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblName.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -102,13 +104,15 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
         add(txtSource, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(lblSource, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSource.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(
+            lblSource,
+            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSource.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 5);
         add(lblSource, gridBagConstraints);
-    }// </editor-fold>//GEN-END:initComponents
+    }                                                                                                     // </editor-fold>//GEN-END:initComponents
 
     @Override
     public String getTitle() {
