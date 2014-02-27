@@ -44,6 +44,7 @@ import org.deegree.datatypes.Types;
 import org.deegree.model.feature.FeatureProperty;
 
 import org.openide.util.Exceptions;
+import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 
 import org.openjump.util.SLDImporter;
@@ -60,10 +61,13 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+
+import java.net.URI;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,6 +81,7 @@ import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -89,6 +94,7 @@ import javax.xml.xpath.XPathExpressionException;
 import de.cismet.cismap.commons.features.FeatureServiceFeature;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.FeatureServiceAttribute;
+import de.cismet.cismap.commons.featureservice.ShapeFileFeatureService;
 import de.cismet.cismap.commons.featureservice.style.StyleDialogInterface;
 import de.cismet.cismap.commons.gui.MappingComponent;
 
@@ -114,6 +120,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
     private AbstractFeatureService service;
     private String geomProperty;
     private JTabbedPane tabbedPane;
+    private AllgemeinPanel allgemein;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -566,7 +573,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
         dialog.setSideBarDescription(I18N.get(
                 "ui.style.ChangeStylesPlugIn.you-can-use-this-dialog-to-change-the-colour-line-width"));
         if (configTabs.contains("Allgemein")) {
-            final AllgemeinPanel allgemein = new AllgemeinPanel(service);
+            allgemein = new AllgemeinPanel(service);
             stylePanels.add(allgemein);
         }
         DeeRenderingStylePanel renderingStylePanel = null;
@@ -722,6 +729,40 @@ public class JumpSLDEditor implements StyleDialogInterface {
                         }
                     }
                 });
+
+                if (service instanceof ShapeFileFeatureService) {
+                    final ShapeFileFeatureService sffs = (ShapeFileFeatureService)service;
+
+                    if (sffs.isFileNotFound() && (allgemein != null && !allgemein.equals(sffs.getDocumentURI().toString()))) {
+                        layer.getLayerManager().deferFiringEvents(new Runnable() {
+                            @Override
+                            public void run() {
+                                String uriAsString = allgemein.getSource();
+
+                                try {
+                                    URI uri = new URI(uriAsString);
+                                    File f = new File(uri);
+
+                                    if (!f.exists()) {
+                                        JOptionPane.showMessageDialog(allgemein,
+                                                NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().fileNotFound.message", uriAsString),
+                                                NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().fileNotFound.title"),
+                                                JOptionPane.ERROR_MESSAGE);
+                                        return;
+                                    }
+                                    sffs.setDocumentURI(uri);
+                                } catch (Exception e)  {
+                                    logger.error("Invalid shape file path", e);
+                                    JOptionPane.showMessageDialog(allgemein,
+                                            NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().invalidUri.message", uriAsString),
+                                            NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().invalidUri.title"),
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+                        });
+                    }
+                }
+
                     //J+
 
                     String sld;

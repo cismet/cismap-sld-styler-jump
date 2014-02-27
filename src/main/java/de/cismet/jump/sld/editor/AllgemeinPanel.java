@@ -13,8 +13,18 @@ package de.cismet.jump.sld.editor;
 
 import com.vividsolutions.jump.workbench.ui.style.StylePanel;
 
+import groovy.model.DefaultTableModel;
+import groovy.model.ValueModel;
+
+import java.util.List;
+
+import javax.swing.event.TableModelListener;
+import javax.swing.table.TableModel;
+
+import de.cismet.cismap.commons.features.DefaultFeatureServiceFeature;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.DocumentFeatureService;
+import de.cismet.cismap.commons.featureservice.ShapeFileFeatureService;
 import de.cismet.cismap.commons.featureservice.WebFeatureService;
 
 /**
@@ -57,6 +67,12 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         } else {
             txtSource.setVisible(false);
             lblSource.setVisible(false);
+        }
+
+        if (service instanceof ShapeFileFeatureService) {
+            if (((ShapeFileFeatureService)service).isFileNotFound()) {
+                txtSource.setEditable(true);
+            }
         }
     }
 
@@ -127,5 +143,14 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
     @Override
     public String validateInput() {
         return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getSource() {
+        return txtSource.getText();
     }
 }
