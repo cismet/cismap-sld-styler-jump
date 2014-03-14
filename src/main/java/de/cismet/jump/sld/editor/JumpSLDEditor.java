@@ -763,18 +763,20 @@ public class JumpSLDEditor implements StyleDialogInterface {
                     }
                 }
 
-                    //J+
+                
+                allgemein.syncServiceWithModel();
+                //J+
 
-                    String sld;
-                    if (tabbedPane.getSelectedComponent() instanceof SLDDefinitionPanel) {
-                        sld = ((SLDDefinitionPanel)tabbedPane.getSelectedComponent()).getSLDString();
-                    } else {
-                        sld = exportSLD();
-                    }
-                    service.setSLDInputStream(sld);
-                    service.refreshFeatures();
+                String sld;
+                if (tabbedPane.getSelectedComponent() instanceof SLDDefinitionPanel) {
+                    sld = ((SLDDefinitionPanel)tabbedPane.getSelectedComponent()).getSLDString();
+                } else {
+                    sld = exportSLD();
                 }
-            };
+                service.setSLDInputStream(sld);
+                service.refreshFeatures();
+            }
+        };
     }
 
     @Override

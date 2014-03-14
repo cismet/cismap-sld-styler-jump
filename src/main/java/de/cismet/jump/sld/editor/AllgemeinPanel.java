@@ -13,19 +13,35 @@ package de.cismet.jump.sld.editor;
 
 import com.vividsolutions.jump.workbench.ui.style.StylePanel;
 
-import groovy.model.DefaultTableModel;
-import groovy.model.ValueModel;
 
 import java.util.List;
 
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
-import de.cismet.cismap.commons.features.DefaultFeatureServiceFeature;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.DocumentFeatureService;
+import de.cismet.cismap.commons.featureservice.FeatureServiceAttribute;
 import de.cismet.cismap.commons.featureservice.ShapeFileFeatureService;
 import de.cismet.cismap.commons.featureservice.WebFeatureService;
+import de.fho.jump.pirol.ui.panels.NewAttributePanel;
+import java.awt.Cursor;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DragSource;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import javax.activation.ActivationDataFlavor;
+import javax.activation.DataHandler;
+import javax.swing.DropMode;
+import javax.swing.JComponent;
+import javax.swing.JTable;
+import javax.swing.TransferHandler;
+import javax.swing.event.TableModelEvent;
+import org.apache.log4j.Logger;
+import org.openide.util.NbBundle;
 
 /**
  * DOCUMENT ME!
@@ -37,10 +53,17 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
 
     //~ Instance fields --------------------------------------------------------
 
-    AbstractFeatureService service;
+    private static final Logger LOG = Logger.getLogger(AllgemeinPanel.class);
+    private AbstractFeatureService service;
+    private AttrributeTableModel model;
+    private TableRowTransferHandler transferHandler = new TableRowTransferHandler();
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private org.jdesktop.swingx.JXTable attributeTable;
+    private javax.swing.JLabel labAttributes;
     private javax.swing.JLabel lblName;
     private javax.swing.JLabel lblSource;
+    private javax.swing.JScrollPane scrAttributeTable;
     private javax.swing.JTextField txtName;
     private javax.swing.JTextField txtSource;
     // End of variables declaration//GEN-END:variables
@@ -74,6 +97,12 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
                 txtSource.setEditable(true);
             }
         }
+        
+        model = new AttrributeTableModel(service);
+        attributeTable.setModel(model);
+        attributeTable.setTransferHandler(transferHandler);
+        attributeTable.setDropMode(DropMode.INSERT_ROWS);
+        attributeTable.setDragEnabled(true);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -91,6 +120,9 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         lblName = new javax.swing.JLabel();
         txtSource = new javax.swing.JTextField();
         lblSource = new javax.swing.JLabel();
+        scrAttributeTable = new javax.swing.JScrollPane();
+        attributeTable = new org.jdesktop.swingx.JXTable();
+        labAttributes = new javax.swing.JLabel();
 
         setLayout(new java.awt.GridBagLayout());
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -102,9 +134,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
         add(txtName, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(
-            lblName,
-            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblName.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(lblName, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblName.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -117,18 +147,49 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints.ipadx = 53;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
+        gridBagConstraints.insets = new java.awt.Insets(15, 5, 5, 15);
         add(txtSource, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(
-            lblSource,
-            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSource.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(lblSource, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSource.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(15, 15, 5, 5);
         add(lblSource, gridBagConstraints);
-    }                                                                                                     // </editor-fold>//GEN-END:initComponents
+
+        scrAttributeTable.setMinimumSize(new java.awt.Dimension(302, 282));
+        scrAttributeTable.setPreferredSize(new java.awt.Dimension(302, 282));
+
+        attributeTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        scrAttributeTable.setViewportView(attributeTable);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 15);
+        add(scrAttributeTable, gridBagConstraints);
+
+        org.openide.awt.Mnemonics.setLocalizedText(labAttributes, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.labAttributes.text")); // NOI18N
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.insets = new java.awt.Insets(15, 15, 5, 15);
+        add(labAttributes, gridBagConstraints);
+    }// </editor-fold>//GEN-END:initComponents
 
     @Override
     public String getTitle() {
@@ -152,5 +213,249 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
      */
     public String getSource() {
         return txtSource.getText();
+    }
+    
+    /**
+     * synchronises the current service with the attribute options from the table
+     */
+    public void syncServiceWithModel() {
+        Map<String, FeatureServiceAttribute> attributeMap = service.getFeatureServiceAttributes();
+        
+        for (String attr : model.attributes) {
+            FeatureServiceAttribute fsa = attributeMap.get(attr);
+            fsa.setVisible(model.visibilityMap.get(attr));
+            fsa.setNameElement(model.nameElementMap.get(attr));
+            fsa.setAlias(model.aliasMap.get(attr));
+        }
+        
+        service.setOrderedFeatureServiceAttributes(model.attributes);
+    }
+    
+    
+    private class AttrributeTableModel implements TableModel {
+        String[] cols = {NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.visibility"), 
+            NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.name"),
+            NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.alias"),
+            NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.nameElement")};
+        List<String> attributes;
+        Map<String, String> aliasMap;
+        Map<String, Boolean> visibilityMap;
+        Map<String, Boolean> nameElementMap;
+        List<TableModelListener> listener = new ArrayList<TableModelListener>();
+
+        
+        public AttrributeTableModel(AbstractFeatureService service) {
+             attributes = service.getOrderedFeatureServiceAttributes();
+             aliasMap = new HashMap<String, String>();
+             visibilityMap = new HashMap<String, Boolean>();
+             nameElementMap = new HashMap<String, Boolean>();
+             Map<String, FeatureServiceAttribute> attributeMap = service.getFeatureServiceAttributes();
+             
+             for (String attr : attributes) {
+                 aliasMap.put(attr, attributeMap.get(attr).getAlias());
+                 nameElementMap.put(attr, attributeMap.get(attr).isNameElement());
+                 visibilityMap.put(attr, attributeMap.get(attr).isVisible());
+             }
+        }
+
+        @Override
+        public int getRowCount() {
+            return attributes.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return cols.length;
+        }
+
+        @Override
+        public String getColumnName(int columnIndex) {
+            return cols[columnIndex];
+        }
+
+        @Override
+        public Class<?> getColumnClass(int columnIndex) {
+            switch (columnIndex) {
+                case 0: {
+                    return Boolean.class;
+                } case 3: {
+                    return Boolean.class;
+                } default: {
+                    return String.class;
+                }
+            }
+        }
+
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            if (columnIndex == 1) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            switch (columnIndex) {
+                case 0: {
+                    return  visibilityMap.get(attributes.get(rowIndex));
+                } case 1: {
+                    String value = attributes.get(rowIndex);
+                    return (value.startsWith("app:") ? value.substring(4) : value);
+                } case 2: {
+                    String alias = aliasMap.get(attributes.get(rowIndex));
+                    return (alias == null ? "" : alias);
+                } case 3: {
+                    return  nameElementMap.get(attributes.get(rowIndex));
+                } default: {
+                    return String.class;
+                }
+            }
+        }
+
+        @Override
+        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+            switch (columnIndex) {
+                case 0: {
+                    if (aValue instanceof Boolean) {
+                        visibilityMap.put(attributes.get(rowIndex), (Boolean)aValue);
+                    }
+                    break;
+                } case 2: {
+                    if (aValue instanceof String) {
+                        String newValue = null;
+                        
+                        if (aValue != null && !((String)aValue).trim().equals("")) {
+                            newValue = (String)aValue;
+                        }
+
+                        aliasMap.put(attributes.get(rowIndex), newValue);
+                    }
+                    break;
+                } case 3: {
+                    if (aValue instanceof Boolean) {
+                        nameElementMap.put(attributes.get(rowIndex), (Boolean)aValue);
+                    }
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void addTableModelListener(TableModelListener l) {
+            listener.add(l);
+        }
+
+        @Override
+        public void removeTableModelListener(TableModelListener l) {
+            listener.remove(l);
+        }
+        
+        private void fireTableChanged() {
+            for (TableModelListener l : listener) {
+                l.tableChanged(new TableModelEvent(this));
+            }
+        }
+        
+        public void moveRowsTo(Integer[] source, int dest) {
+            List<String> newAttributes = new ArrayList<String>();
+            Arrays.sort(source);
+            
+            for (int sourceIndex = 0; sourceIndex < attributes.size(); ++sourceIndex) {
+                if (sourceIndex != dest && Arrays.binarySearch(source, sourceIndex) < 0) {
+                    newAttributes.add(attributes.get(sourceIndex));
+                } else if(sourceIndex == dest) {
+                    for (Integer i : source) {
+                        newAttributes.add(attributes.get(i));
+                    }
+                    
+                    if (Arrays.binarySearch(source, sourceIndex) < 0) {
+                        newAttributes.add(attributes.get(sourceIndex));
+                    }
+                }
+            }
+            
+            if (dest == attributes.size()) {
+                for (Integer i : source) {
+                    newAttributes.add(attributes.get(i));
+                }
+            }
+            
+            attributes = newAttributes;
+            fireTableChanged();
+        }
+    }
+    
+    /**
+     * Allows to move a row per DnD to an other position in the table 
+     */
+    private class TableRowTransferHandler extends TransferHandler {
+        private final DataFlavor rowFlavor;
+
+
+        public TableRowTransferHandler() {
+            rowFlavor = new ActivationDataFlavor(Integer[].class, DataFlavor.javaJVMLocalObjectMimeType, "Array of items");
+        }
+        
+        @Override 
+        protected Transferable createTransferable(JComponent c) {
+            JTable table = (JTable) c;
+            ArrayList<Integer> list = new ArrayList<Integer>();
+            
+            for(int i: table.getSelectedRows()) {
+                list.add(i);
+            }
+            
+            Integer[] transferedObjects = list.toArray(new Integer[list.size()]);
+            
+            return new DataHandler(transferedObjects,rowFlavor.getMimeType());
+        }
+        
+        @Override 
+        public boolean canImport(TransferHandler.TransferSupport info) {
+            JTable t = (JTable)info.getComponent();
+            boolean b = info.isDrop() && info.isDataFlavorSupported(rowFlavor);
+            
+            t.setCursor( b ? DragSource.DefaultMoveDrop : DragSource.DefaultMoveNoDrop);
+            
+            return b;
+        }
+        
+        @Override 
+        public int getSourceActions(JComponent c) {
+            return TransferHandler.COPY_OR_MOVE;
+        }
+        
+        @Override 
+        public boolean importData(TransferHandler.TransferSupport info) {
+            JTable target = (JTable)info.getComponent();
+            JTable.DropLocation dl = (JTable.DropLocation)info.getDropLocation();
+            AttrributeTableModel model = (AttrributeTableModel)target.getModel();
+            int index = dl.getRow();
+            int max = model.getRowCount();
+            
+            if (index < 0 || index > max) {
+                index = max;
+            }
+            target.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            
+            try {
+                Object[] values =
+                    (Object[])info.getTransferable().getTransferData(rowFlavor);
+                
+                model.moveRowsTo((Integer[])values, index);
+                return true;
+            } catch(Exception e) {
+                LOG.error("Error while importing data after DnD operation.", e);
+            }
+            
+            return false;
+        }
+        
+        @Override 
+        protected void exportDone(JComponent c, Transferable t, int act) {
+            c.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
     }
 }
