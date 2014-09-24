@@ -13,9 +13,31 @@ package de.cismet.jump.sld.editor;
 
 import com.vividsolutions.jump.workbench.ui.style.StylePanel;
 
+import de.fho.jump.pirol.ui.panels.NewAttributePanel;
 
+import org.apache.log4j.Logger;
+
+import org.openide.util.NbBundle;
+
+import java.awt.Cursor;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DragSource;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.activation.ActivationDataFlavor;
+import javax.activation.DataHandler;
+
+import javax.swing.DropMode;
+import javax.swing.JComponent;
+import javax.swing.JTable;
+import javax.swing.TransferHandler;
+import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
@@ -24,24 +46,6 @@ import de.cismet.cismap.commons.featureservice.DocumentFeatureService;
 import de.cismet.cismap.commons.featureservice.FeatureServiceAttribute;
 import de.cismet.cismap.commons.featureservice.ShapeFileFeatureService;
 import de.cismet.cismap.commons.featureservice.WebFeatureService;
-import de.fho.jump.pirol.ui.panels.NewAttributePanel;
-import java.awt.Cursor;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DragSource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import javax.activation.ActivationDataFlavor;
-import javax.activation.DataHandler;
-import javax.swing.DropMode;
-import javax.swing.JComponent;
-import javax.swing.JTable;
-import javax.swing.TransferHandler;
-import javax.swing.event.TableModelEvent;
-import org.apache.log4j.Logger;
-import org.openide.util.NbBundle;
 
 /**
  * DOCUMENT ME!
@@ -51,17 +55,22 @@ import org.openide.util.NbBundle;
  */
 public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
 
-    //~ Instance fields --------------------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(AllgemeinPanel.class);
+
+    //~ Instance fields --------------------------------------------------------
+
     private AbstractFeatureService service;
     private AttrributeTableModel model;
     private TableRowTransferHandler transferHandler = new TableRowTransferHandler();
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.jdesktop.swingx.JXTable attributeTable;
+    private javax.swing.JCheckBox cbSelectable;
     private javax.swing.JLabel labAttributes;
     private javax.swing.JLabel lblName;
+    private javax.swing.JLabel lblSelectable;
     private javax.swing.JLabel lblSource;
     private javax.swing.JScrollPane scrAttributeTable;
     private javax.swing.JTextField txtName;
@@ -79,6 +88,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         this.service = service;
         initComponents();
         txtName.setText(service.getName());
+        cbSelectable.setSelected(service.isSelectable());
         txtSource.setEditable(false);
 
         if (service instanceof DocumentFeatureService) {
@@ -97,7 +107,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
                 txtSource.setEditable(true);
             }
         }
-        
+
         model = new AttrributeTableModel(service);
         attributeTable.setModel(model);
         attributeTable.setTransferHandler(transferHandler);
@@ -123,18 +133,21 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         scrAttributeTable = new javax.swing.JScrollPane();
         attributeTable = new org.jdesktop.swingx.JXTable();
         labAttributes = new javax.swing.JLabel();
+        lblSelectable = new javax.swing.JLabel();
+        cbSelectable = new javax.swing.JCheckBox();
 
         setLayout(new java.awt.GridBagLayout());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.ipadx = 53;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
         add(txtName, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(lblName, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblName.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(
+            lblName,
+            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblName.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -144,13 +157,14 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.ipadx = 53;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(15, 5, 5, 15);
         add(txtSource, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(lblSource, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSource.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(
+            lblSource,
+            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSource.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -158,38 +172,57 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         add(lblSource, gridBagConstraints);
 
         scrAttributeTable.setMinimumSize(new java.awt.Dimension(302, 282));
-        scrAttributeTable.setPreferredSize(new java.awt.Dimension(302, 282));
+        scrAttributeTable.setPreferredSize(new java.awt.Dimension(402, 282));
 
         attributeTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                    { null, null, null, null },
+                    { null, null, null, null },
+                    { null, null, null, null },
+                    { null, null, null, null }
+                },
+                new String[] { "Title 1", "Title 2", "Title 3", "Title 4" }));
         scrAttributeTable.setViewportView(attributeTable);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridy = 4;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 15);
         add(scrAttributeTable, gridBagConstraints);
 
-        org.openide.awt.Mnemonics.setLocalizedText(labAttributes, org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.labAttributes.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(
+            labAttributes,
+            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.labAttributes.text")); // NOI18N
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(15, 15, 5, 15);
         add(labAttributes, gridBagConstraints);
-    }// </editor-fold>//GEN-END:initComponents
+
+        org.openide.awt.Mnemonics.setLocalizedText(
+            lblSelectable,
+            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.lblSelectable.text")); // NOI18N
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 5);
+        add(lblSelectable, gridBagConstraints);
+
+        org.openide.awt.Mnemonics.setLocalizedText(
+            cbSelectable,
+            org.openide.util.NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.cbSelectable.text")); // NOI18N
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
+        add(cbSelectable, gridBagConstraints);
+    }                                                                                                        // </editor-fold>//GEN-END:initComponents
 
     @Override
     public String getTitle() {
@@ -199,6 +232,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
     @Override
     public void updateStyles() {
         service.setName(txtName.getText());
+        service.setSelectable(cbSelectable.isSelected());
     }
 
     @Override
@@ -214,49 +248,68 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
     public String getSource() {
         return txtSource.getText();
     }
-    
+
     /**
-     * synchronises the current service with the attribute options from the table
+     * synchronises the current service with the attribute options from the table.
      */
     public void syncServiceWithModel() {
-        Map<String, FeatureServiceAttribute> attributeMap = service.getFeatureServiceAttributes();
-        
-        for (String attr : model.attributes) {
-            FeatureServiceAttribute fsa = attributeMap.get(attr);
+        final Map<String, FeatureServiceAttribute> attributeMap = service.getFeatureServiceAttributes();
+
+        for (final String attr : model.attributes) {
+            final FeatureServiceAttribute fsa = attributeMap.get(attr);
             fsa.setVisible(model.visibilityMap.get(attr));
             fsa.setNameElement(model.nameElementMap.get(attr));
             fsa.setAlias(model.aliasMap.get(attr));
         }
-        
+
         service.setOrderedFeatureServiceAttributes(model.attributes);
     }
-    
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
     private class AttrributeTableModel implements TableModel {
-        String[] cols = {NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.visibility"), 
-            NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.name"),
-            NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.alias"),
-            NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.nameElement")};
+
+        //~ Instance fields ----------------------------------------------------
+
+        String[] cols = {
+                NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.visibility"),
+                NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.name"),
+                NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.alias"),
+                NbBundle.getMessage(AttrributeTableModel.class, "AllgemeinPanel.AttributeTableModel.nameElement")
+            };
         List<String> attributes;
         Map<String, String> aliasMap;
         Map<String, Boolean> visibilityMap;
         Map<String, Boolean> nameElementMap;
         List<TableModelListener> listener = new ArrayList<TableModelListener>();
 
-        
-        public AttrributeTableModel(AbstractFeatureService service) {
-             attributes = service.getOrderedFeatureServiceAttributes();
-             aliasMap = new HashMap<String, String>();
-             visibilityMap = new HashMap<String, Boolean>();
-             nameElementMap = new HashMap<String, Boolean>();
-             Map<String, FeatureServiceAttribute> attributeMap = service.getFeatureServiceAttributes();
-             
-             for (String attr : attributes) {
-                 aliasMap.put(attr, attributeMap.get(attr).getAlias());
-                 nameElementMap.put(attr, attributeMap.get(attr).isNameElement());
-                 visibilityMap.put(attr, attributeMap.get(attr).isVisible());
-             }
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new AttrributeTableModel object.
+         *
+         * @param  service  DOCUMENT ME!
+         */
+        public AttrributeTableModel(final AbstractFeatureService service) {
+            attributes = service.getOrderedFeatureServiceAttributes();
+            aliasMap = new HashMap<String, String>();
+            visibilityMap = new HashMap<String, Boolean>();
+            nameElementMap = new HashMap<String, Boolean>();
+            final Map<String, FeatureServiceAttribute> attributeMap = service.getFeatureServiceAttributes();
+
+            for (final String attr : attributes) {
+                aliasMap.put(attr, attributeMap.get(attr).getAlias());
+                nameElementMap.put(attr, attributeMap.get(attr).isNameElement());
+                visibilityMap.put(attr, attributeMap.get(attr).isVisible());
+            }
         }
+
+        //~ Methods ------------------------------------------------------------
 
         @Override
         public int getRowCount() {
@@ -269,25 +322,27 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         }
 
         @Override
-        public String getColumnName(int columnIndex) {
+        public String getColumnName(final int columnIndex) {
             return cols[columnIndex];
         }
 
         @Override
-        public Class<?> getColumnClass(int columnIndex) {
+        public Class<?> getColumnClass(final int columnIndex) {
             switch (columnIndex) {
                 case 0: {
                     return Boolean.class;
-                } case 3: {
+                }
+                case 3: {
                     return Boolean.class;
-                } default: {
+                }
+                default: {
                     return String.class;
                 }
             }
         }
 
         @Override
-        public boolean isCellEditable(int rowIndex, int columnIndex) {
+        public boolean isCellEditable(final int rowIndex, final int columnIndex) {
             if (columnIndex == 1) {
                 return false;
             } else {
@@ -296,44 +351,50 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         }
 
         @Override
-        public Object getValueAt(int rowIndex, int columnIndex) {
+        public Object getValueAt(final int rowIndex, final int columnIndex) {
             switch (columnIndex) {
                 case 0: {
-                    return  visibilityMap.get(attributes.get(rowIndex));
-                } case 1: {
-                    String value = attributes.get(rowIndex);
+                    return visibilityMap.get(attributes.get(rowIndex));
+                }
+                case 1: {
+                    final String value = attributes.get(rowIndex);
                     return (value.startsWith("app:") ? value.substring(4) : value);
-                } case 2: {
-                    String alias = aliasMap.get(attributes.get(rowIndex));
-                    return (alias == null ? "" : alias);
-                } case 3: {
-                    return  nameElementMap.get(attributes.get(rowIndex));
-                } default: {
+                }
+                case 2: {
+                    final String alias = aliasMap.get(attributes.get(rowIndex));
+                    return ((alias == null) ? "" : alias);
+                }
+                case 3: {
+                    return nameElementMap.get(attributes.get(rowIndex));
+                }
+                default: {
                     return String.class;
                 }
             }
         }
 
         @Override
-        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        public void setValueAt(final Object aValue, final int rowIndex, final int columnIndex) {
             switch (columnIndex) {
                 case 0: {
                     if (aValue instanceof Boolean) {
                         visibilityMap.put(attributes.get(rowIndex), (Boolean)aValue);
                     }
                     break;
-                } case 2: {
+                }
+                case 2: {
                     if (aValue instanceof String) {
                         String newValue = null;
-                        
-                        if (aValue != null && !((String)aValue).trim().equals("")) {
+
+                        if ((aValue != null) && !((String)aValue).trim().equals("")) {
                             newValue = (String)aValue;
                         }
 
                         aliasMap.put(attributes.get(rowIndex), newValue);
                     }
                     break;
-                } case 3: {
+                }
+                case 3: {
                     if (aValue instanceof Boolean) {
                         nameElementMap.put(attributes.get(rowIndex), (Boolean)aValue);
                     }
@@ -343,118 +404,140 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         }
 
         @Override
-        public void addTableModelListener(TableModelListener l) {
+        public void addTableModelListener(final TableModelListener l) {
             listener.add(l);
         }
 
         @Override
-        public void removeTableModelListener(TableModelListener l) {
+        public void removeTableModelListener(final TableModelListener l) {
             listener.remove(l);
         }
-        
+
+        /**
+         * DOCUMENT ME!
+         */
         private void fireTableChanged() {
-            for (TableModelListener l : listener) {
+            for (final TableModelListener l : listener) {
                 l.tableChanged(new TableModelEvent(this));
             }
         }
-        
-        public void moveRowsTo(Integer[] source, int dest) {
-            List<String> newAttributes = new ArrayList<String>();
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  source  DOCUMENT ME!
+         * @param  dest    DOCUMENT ME!
+         */
+        public void moveRowsTo(final Integer[] source, final int dest) {
+            final List<String> newAttributes = new ArrayList<String>();
             Arrays.sort(source);
-            
+
             for (int sourceIndex = 0; sourceIndex < attributes.size(); ++sourceIndex) {
-                if (sourceIndex != dest && Arrays.binarySearch(source, sourceIndex) < 0) {
+                if ((sourceIndex != dest) && (Arrays.binarySearch(source, sourceIndex) < 0)) {
                     newAttributes.add(attributes.get(sourceIndex));
-                } else if(sourceIndex == dest) {
-                    for (Integer i : source) {
+                } else if (sourceIndex == dest) {
+                    for (final Integer i : source) {
                         newAttributes.add(attributes.get(i));
                     }
-                    
+
                     if (Arrays.binarySearch(source, sourceIndex) < 0) {
                         newAttributes.add(attributes.get(sourceIndex));
                     }
                 }
             }
-            
+
             if (dest == attributes.size()) {
-                for (Integer i : source) {
+                for (final Integer i : source) {
                     newAttributes.add(attributes.get(i));
                 }
             }
-            
+
             attributes = newAttributes;
             fireTableChanged();
         }
     }
-    
+
     /**
-     * Allows to move a row per DnD to an other position in the table 
+     * Allows to move a row per DnD to an other position in the table.
+     *
+     * @version  $Revision$, $Date$
      */
     private class TableRowTransferHandler extends TransferHandler {
+
+        //~ Instance fields ----------------------------------------------------
+
         private final DataFlavor rowFlavor;
 
+        //~ Constructors -------------------------------------------------------
 
+        /**
+         * Creates a new TableRowTransferHandler object.
+         */
         public TableRowTransferHandler() {
-            rowFlavor = new ActivationDataFlavor(Integer[].class, DataFlavor.javaJVMLocalObjectMimeType, "Array of items");
+            rowFlavor = new ActivationDataFlavor(
+                    Integer[].class,
+                    DataFlavor.javaJVMLocalObjectMimeType,
+                    "Array of items");
         }
-        
-        @Override 
-        protected Transferable createTransferable(JComponent c) {
-            JTable table = (JTable) c;
-            ArrayList<Integer> list = new ArrayList<Integer>();
-            
-            for(int i: table.getSelectedRows()) {
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        protected Transferable createTransferable(final JComponent c) {
+            final JTable table = (JTable)c;
+            final ArrayList<Integer> list = new ArrayList<Integer>();
+
+            for (final int i : table.getSelectedRows()) {
                 list.add(i);
             }
-            
-            Integer[] transferedObjects = list.toArray(new Integer[list.size()]);
-            
-            return new DataHandler(transferedObjects,rowFlavor.getMimeType());
+
+            final Integer[] transferedObjects = list.toArray(new Integer[list.size()]);
+
+            return new DataHandler(transferedObjects, rowFlavor.getMimeType());
         }
-        
-        @Override 
-        public boolean canImport(TransferHandler.TransferSupport info) {
-            JTable t = (JTable)info.getComponent();
-            boolean b = info.isDrop() && info.isDataFlavorSupported(rowFlavor);
-            
-            t.setCursor( b ? DragSource.DefaultMoveDrop : DragSource.DefaultMoveNoDrop);
-            
+
+        @Override
+        public boolean canImport(final TransferHandler.TransferSupport info) {
+            final JTable t = (JTable)info.getComponent();
+            final boolean b = info.isDrop() && info.isDataFlavorSupported(rowFlavor);
+
+            t.setCursor(b ? DragSource.DefaultMoveDrop : DragSource.DefaultMoveNoDrop);
+
             return b;
         }
-        
-        @Override 
-        public int getSourceActions(JComponent c) {
+
+        @Override
+        public int getSourceActions(final JComponent c) {
             return TransferHandler.COPY_OR_MOVE;
         }
-        
-        @Override 
-        public boolean importData(TransferHandler.TransferSupport info) {
-            JTable target = (JTable)info.getComponent();
-            JTable.DropLocation dl = (JTable.DropLocation)info.getDropLocation();
-            AttrributeTableModel model = (AttrributeTableModel)target.getModel();
+
+        @Override
+        public boolean importData(final TransferHandler.TransferSupport info) {
+            final JTable target = (JTable)info.getComponent();
+            final JTable.DropLocation dl = (JTable.DropLocation)info.getDropLocation();
+            final AttrributeTableModel model = (AttrributeTableModel)target.getModel();
             int index = dl.getRow();
-            int max = model.getRowCount();
-            
-            if (index < 0 || index > max) {
+            final int max = model.getRowCount();
+
+            if ((index < 0) || (index > max)) {
                 index = max;
             }
             target.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            
+
             try {
-                Object[] values =
-                    (Object[])info.getTransferable().getTransferData(rowFlavor);
-                
+                final Object[] values = (Object[])info.getTransferable().getTransferData(rowFlavor);
+
                 model.moveRowsTo((Integer[])values, index);
                 return true;
-            } catch(Exception e) {
+            } catch (Exception e) {
                 LOG.error("Error while importing data after DnD operation.", e);
             }
-            
+
             return false;
         }
-        
-        @Override 
-        protected void exportDone(JComponent c, Transferable t, int act) {
+
+        @Override
+        protected void exportDone(final JComponent c, final Transferable t, final int act) {
             c.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
