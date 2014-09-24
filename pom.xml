@@ -20,11 +20,6 @@
   </properties>
   
   <repositories>
-      <repository>
-      <id>openjump</id>
-      <name>OpenJUMP Maven 2 Repository</name>
-      <url>http://jump-pilot.svn.sourceforge.net/svnroot/jump-pilot/maven-repository/</url>
-    </repository>
     <repository>
             <id>cismet-repo</id>
             <url>https://repo.cismet.de/repo</url>
@@ -49,10 +44,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-            <groupId>org.openjump</groupId>
-            <artifactId>OpenJUMP</artifactId>
-            <version>1.5</version>
-        </dependency>
+        <groupId>de.cismet.custom</groupId>
+        <artifactId>cismet-JUMP</artifactId>
+        <version>1.5</version>
+    </dependency>
     <dependency>
       <groupId>de.cismet.commons</groupId>
       <artifactId>cismap-commons</artifactId>
