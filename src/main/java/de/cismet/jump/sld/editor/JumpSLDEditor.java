@@ -350,9 +350,14 @@ public class JumpSLDEditor implements StyleDialogInterface {
             };
         service = featureService;
         final FeatureSchema featureSchema = new FeatureSchema();
-        final List<FeatureServiceFeature> featureList = featureService.getFeatureFactory().getLastCreatedFeatures();
-        if (featureList.size() > 0) {
-            firstFeature = ((FeatureServiceFeature)featureList.get(0));
+        List<FeatureServiceFeature> featureList;
+        if (featureService.getFeatureFactory() != null) {
+            featureList = featureService.getFeatureFactory().getLastCreatedFeatures();
+            if (featureList.size() > 0) {
+                firstFeature = ((FeatureServiceFeature)featureList.get(0));
+            }
+        } else {
+            featureList = new ArrayList<FeatureServiceFeature>();
         }
         Map props;
         boolean useFeature = true;
@@ -591,7 +596,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
                 final ColorThemingStylePanel colorThemingStylePanel = new ColorThemingStylePanel(
                         layer,
                         workbenchContext);
-                colorThemingStylePanel.setPreferredSize(new Dimension(400, 300));
+                colorThemingStylePanel.setPreferredSize(new Dimension(610, 300));
                 stylePanels.add(colorThemingStylePanel);
                 if (configTabs.contains("Darstellung")) {
                     GUIUtil.sync(renderingStylePanel.getTransparencySlider(),
@@ -606,7 +611,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
         }
         if (configTabs.contains("Begleitsymbole")) {
             final DecorationStylePanel decorationStylePanel = new DecorationStylePanel(layer, new ArrayList());
-            decorationStylePanel.setPreferredSize(new Dimension(400, 300));
+            decorationStylePanel.setPreferredSize(new Dimension(450, 300));
             stylePanels.add(decorationStylePanel);
         }
         SLDDefinitionPanel definitonPanel = null;
@@ -763,20 +768,20 @@ public class JumpSLDEditor implements StyleDialogInterface {
                     }
                 }
 
-                
-                allgemein.syncServiceWithModel();
-                //J+
 
-                String sld;
-                if (tabbedPane.getSelectedComponent() instanceof SLDDefinitionPanel) {
-                    sld = ((SLDDefinitionPanel)tabbedPane.getSelectedComponent()).getSLDString();
-                } else {
-                    sld = exportSLD();
+                allgemein.syncServiceWithModel();
+                    //J+
+
+                    String sld;
+                    if (tabbedPane.getSelectedComponent() instanceof SLDDefinitionPanel) {
+                        sld = ((SLDDefinitionPanel)tabbedPane.getSelectedComponent()).getSLDString();
+                    } else {
+                        sld = exportSLD();
+                    }
+                    service.setSLDInputStream(sld);
+                    service.refreshFeatures();
                 }
-                service.setSLDInputStream(sld);
-                service.refreshFeatures();
-            }
-        };
+            };
     }
 
     @Override
