@@ -106,7 +106,7 @@ import de.cismet.cismap.commons.gui.MappingComponent;
  */
 @ServiceProvider(
     service = StyleDialogInterface.class,
-    position = 1
+    position = 10
 )
 public class JumpSLDEditor implements StyleDialogInterface {
 
