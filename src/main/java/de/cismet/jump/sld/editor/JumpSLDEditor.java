@@ -121,6 +121,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
     private String geomProperty;
     private JTabbedPane tabbedPane;
     private AllgemeinPanel allgemein;
+    private QueryPanel queryPanel;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -614,6 +615,11 @@ public class JumpSLDEditor implements StyleDialogInterface {
             decorationStylePanel.setPreferredSize(new Dimension(450, 300));
             stylePanels.add(decorationStylePanel);
         }
+
+        if (configTabs.contains("QueryPanel")) {
+            queryPanel = new QueryPanel(service);
+            stylePanels.add(queryPanel);
+        }
         SLDDefinitionPanel definitonPanel = null;
         if (configTabs.contains("TextEditor")) {
             definitonPanel = new SLDDefinitionPanel();
@@ -770,6 +776,9 @@ public class JumpSLDEditor implements StyleDialogInterface {
 
 
                 allgemein.syncServiceWithModel();
+                if (queryPanel != null) {
+                    queryPanel.syncServiceWithPanel();
+                }
                     //J+
 
                     String sld;
