@@ -17,8 +17,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <name>${names.jump-sld-editor}</name>
+    
     <description>!!! description pending !!!</description>
-    <url>http://maven.apache.org</url>
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License</name>
+            <distribution>repo</distribution>
+            <url>http://www.gnu.org/licenses/lgpl-3.0.html</url>
+        </license>
+    </licenses>
 
     <repositories>
         <repository>
