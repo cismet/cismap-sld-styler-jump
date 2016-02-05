@@ -1,26 +1,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>de.cismet.cids</groupId>
-    <artifactId>cids-parent</artifactId>
-    <version>2.3.1</version>
-  </parent>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.cismet.cids</groupId>
+        <artifactId>cids-parent</artifactId>
+        <version>2.3.1</version>
+    </parent>
   
-  <groupId>de.cismet</groupId>
-  <artifactId>Jump-sld-editor</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+    <groupId>de.cismet</groupId>
+    <artifactId>Jump-sld-editor</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    
+    <properties>
+        <names.jump-sld-editor>Jump-sld-editor</names.jump-sld-editor>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <name>${names.jump-sld-editor}</name>
+    <description>!!! description pending !!!</description>
+    <url>http://maven.apache.org</url>
 
-  <name>Jump-sld-editor</name>
-  <url>http://maven.apache.org</url>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  
-  <repositories>
-    <repository>
+    <repositories>
+        <repository>
             <id>cismet-repo</id>
             <url>https://repo.cismet.de/repo</url>
             <releases>
@@ -34,34 +35,34 @@
                 <updatePolicy>interval:60</updatePolicy>
             </snapshots>
         </repository>
-  </repositories>
+    </repositories>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>de.cismet.custom</groupId>
-        <artifactId>cismet-JUMP</artifactId>
-        <version>1.5.1</version>
-    </dependency>
-    <dependency>
-      <groupId>de.cismet.commons</groupId>
-      <artifactId>cismap-commons</artifactId>
-      <version>2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>de.cismet.cids.navigator</groupId>
-      <artifactId>cids-navigator</artifactId>
-      <version>2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>de.cismet.cismap</groupId>
-      <artifactId>cismap-plugin</artifactId>
-      <version>2.0-SNAPSHOT</version>
-    </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.cismet.custom</groupId>
+            <artifactId>cismet-JUMP</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>de.cismet.commons</groupId>
+            <artifactId>cismap-commons</artifactId>
+            <version>2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>de.cismet.cids.navigator</groupId>
+            <artifactId>cids-navigator</artifactId>
+            <version>2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>de.cismet.cismap</groupId>
+            <artifactId>cismap-plugin</artifactId>
+            <version>2.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 </project>
