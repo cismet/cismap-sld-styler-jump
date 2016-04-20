@@ -78,6 +78,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -98,7 +99,6 @@ import de.cismet.cismap.commons.featureservice.H2FeatureService;
 import de.cismet.cismap.commons.featureservice.ShapeFileFeatureService;
 import de.cismet.cismap.commons.featureservice.style.StyleDialogInterface;
 import de.cismet.cismap.commons.gui.MappingComponent;
-import java.util.TreeSet;
 
 /**
  * DOCUMENT ME!
@@ -267,10 +267,10 @@ public class JumpSLDEditor implements StyleDialogInterface {
             logger.info("Found multiple colorThemes in sld file, use first");
         }
         ColorThemingStyle cts = null;
-        //contains all cts rules
+        // contains all cts rules
         boolean firstStyle = true;
-        TreeSet<String> colorStyles = new TreeSet<String>();
-        
+        final TreeSet<String> colorStyles = new TreeSet<String>();
+
         if (colorThemeStyles.size() != 0) {
             cts = colorThemeStyles.peek();
             colorStyles.addAll(cts.getAttributeValueToLabelMap().values());
@@ -278,13 +278,13 @@ public class JumpSLDEditor implements StyleDialogInterface {
 
         Double totalMax = null;
         Double totalMin = null;
-        Element documentElement = doc.getDocumentElement();
+        final Element documentElement = doc.getDocumentElement();
 
         for (final String ruleName : rules) {
             // check the min/max scale
             if (!ruleName.equals("labelStyle")) {
                 try {
-                    if (totalMax == null || totalMax != -1) {
+                    if ((totalMax == null) || (totalMax != -1)) {
                         final Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
                                         + "']/sld:MaxScaleDenominator",
                                 documentElement,
@@ -305,8 +305,8 @@ public class JumpSLDEditor implements StyleDialogInterface {
                             totalMax = -1.0;
                         }
                     }
-                    
-                    if (totalMin == null || totalMin != -1) {
+
+                    if ((totalMin == null) || (totalMin != -1)) {
                         final Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
                                         + "']/sld:MinScaleDenominator",
                                 documentElement,
@@ -440,7 +440,8 @@ public class JumpSLDEditor implements StyleDialogInterface {
                     type = AttributeType.OBJECT;
                 }
             } else {
-                final FeatureServiceAttribute attr = (FeatureServiceAttribute)featureService.getFeatureServiceAttributes().get(entry);
+                final FeatureServiceAttribute attr = (FeatureServiceAttribute)
+                    featureService.getFeatureServiceAttributes().get(entry);
                 name = (String)entry;
 
                 if (attr.isGeometry()) {
