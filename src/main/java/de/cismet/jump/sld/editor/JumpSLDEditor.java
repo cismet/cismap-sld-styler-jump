@@ -78,6 +78,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -94,6 +95,7 @@ import javax.xml.xpath.XPathExpressionException;
 import de.cismet.cismap.commons.features.FeatureServiceFeature;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.FeatureServiceAttribute;
+import de.cismet.cismap.commons.featureservice.H2FeatureService;
 import de.cismet.cismap.commons.featureservice.ShapeFileFeatureService;
 import de.cismet.cismap.commons.featureservice.style.StyleDialogInterface;
 import de.cismet.cismap.commons.gui.MappingComponent;
@@ -128,51 +130,70 @@ public class JumpSLDEditor implements StyleDialogInterface {
     /**
      * DOCUMENT ME!
      *
-     * @param  l    DOCUMENT ME!
-     * @param  bs   DOCUMENT ME!
-     * @param  vs   DOCUMENT ME!
-     * @param  ls   DOCUMENT ME!
-     * @param  cts  DOCUMENT ME!
+     * @param  l           DOCUMENT ME!
+     * @param  bs          DOCUMENT ME!
+     * @param  vs          DOCUMENT ME!
+     * @param  ls          DOCUMENT ME!
+     * @param  cts         DOCUMENT ME!
+     * @param  ctsDefault  DOCUMENT ME!
      */
     public void setStyle(final Layer l,
             final BasicStyle bs,
             final VertexStyle vs,
             final LabelStyle ls,
-            final ColorThemingStyle cts) {
+            final ColorThemingStyle cts,
+            final BasicStyle ctsDefault) {
         Style oldStyle = null;
         if (bs != null) {
             bs.setEnabled(true);
             oldStyle = l.getBasicStyle();
-            if (oldStyle != null) {
-                l.removeStyle(oldStyle);
+            if (oldStyle != bs) {
+                if (oldStyle != null) {
+                    l.removeStyle(oldStyle);
+                }
+                l.addStyle(bs);
             }
-            l.addStyle(bs);
+        } else if (ctsDefault != null) {
+            ctsDefault.setEnabled(true);
+            oldStyle = l.getBasicStyle();
+            if (oldStyle != ctsDefault) {
+                if (oldStyle != null) {
+                    l.removeStyle(oldStyle);
+                }
+                l.addStyle(ctsDefault);
+            }
         }
         if (vs != null) {
             vs.setEnabled(true);
             oldStyle = l.getVertexStyle();
-            if (oldStyle != null) {
-                l.removeStyle(oldStyle);
+            if (oldStyle != vs) {
+                if (oldStyle != null) {
+                    l.removeStyle(oldStyle);
+                }
+                l.addStyle(vs);
             }
-            l.addStyle(vs);
         }
         if (ls != null) {
             ls.setEnabled(true);
             oldStyle = l.getLabelStyle();
-            if (oldStyle != null) {
-                l.removeStyle(oldStyle);
+            if (oldStyle != ls) {
+                if (oldStyle != null) {
+                    l.removeStyle(oldStyle);
+                }
+                l.addStyle(ls);
             }
-            l.addStyle(ls);
         }
         if (cts != null) {
             try {
                 cts.setDefaultStyle((BasicStyle)cts.getAttributeValueToBasicStyleMap().values().iterator().next());
                 cts.setEnabled(true);
                 oldStyle = l.getStyle(ColorThemingStyle.class);
-                if (oldStyle != null) {
-                    l.removeStyle(oldStyle);
+                if (oldStyle != cts) {
+                    if (oldStyle != null) {
+                        l.removeStyle(oldStyle);
+                    }
+                    l.addStyle(cts);
                 }
-                l.addStyle(cts);
             } catch (NumberFormatException e) {
                 logger.error("Error in StyleDialog", e);
             }
@@ -187,6 +208,12 @@ public class JumpSLDEditor implements StyleDialogInterface {
      */
     public void importSLD(final Document doc, final Layer layer) {
         final LinkedList<String> rules = SLDImporter.getRuleNames(doc);
+
+        if (rules.get(0).equals("ColorThemingDefaultValue")) {
+            final String rule = rules.remove(0);
+            rules.add(rule);
+        }
+
         if (rules.isEmpty()) {
             logger.info("No style found");
             return;
@@ -226,7 +253,8 @@ public class JumpSLDEditor implements StyleDialogInterface {
                 SLDImporter.getBasicStyle(rules.peek(), doc),
                 SLDImporter.getVertexStyle(rules.peek(), doc),
                 SLDImporter.getLabelStyle(rules.peek(), doc),
-                SLDImporter.getColorThemingStyle(rules.peek(), doc));
+                SLDImporter.getColorThemingStyle(rules.peek(), doc),
+                null);
             return;
         }
 
@@ -239,73 +267,88 @@ public class JumpSLDEditor implements StyleDialogInterface {
             logger.info("Found multiple colorThemes in sld file, use first");
         }
         ColorThemingStyle cts = null;
+        // contains all cts rules
+        boolean firstStyle = true;
+        final TreeSet<String> colorStyles = new TreeSet<String>();
+
         if (colorThemeStyles.size() != 0) {
             cts = colorThemeStyles.peek();
+            colorStyles.addAll(cts.getAttributeValueToLabelMap().values());
         }
 
         Double totalMax = null;
         Double totalMin = null;
+        final Element documentElement = doc.getDocumentElement();
 
         for (final String ruleName : rules) {
             // check the min/max scale
             if (!ruleName.equals("labelStyle")) {
                 try {
-                    final Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
-                                    + "']/sld:MinScaleDenominator",
-                            doc.getDocumentElement(),
-                            SLDImporter.NSCONTEXT);
-                    final Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
-                                    + "']/sld:MaxScaleDenominator",
-                            doc.getDocumentElement(),
-                            SLDImporter.NSCONTEXT);
+                    if ((totalMax == null) || (totalMax != -1)) {
+                        final Element maxElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
+                                        + "']/sld:MaxScaleDenominator",
+                                documentElement,
+                                SLDImporter.NSCONTEXT);
 
-                    if (maxElement != null) {
-                        final Double max = new Double(maxElement.getTextContent());
-                        if (max.doubleValue() > 0) {
-                            if (totalMax == null) {
-                                totalMax = max;
-                            } else if (totalMax > 0) {
-                                if (!totalMax.equals(max)) {
-                                    totalMax = -1.0;
+                        if (maxElement != null) {
+                            final Double max = new Double(maxElement.getTextContent());
+                            if (max.doubleValue() > 0) {
+                                if (totalMax == null) {
+                                    totalMax = max;
+                                } else if (totalMax > 0) {
+                                    if (!totalMax.equals(max)) {
+                                        totalMax = -1.0;
+                                    }
                                 }
                             }
+                        } else {
+                            totalMax = -1.0;
                         }
-                    } else {
-                        totalMax = -1.0;
                     }
 
-                    if (minElement != null) {
-                        final Double min = new Double(minElement.getTextContent());
+                    if ((totalMin == null) || (totalMin != -1)) {
+                        final Element minElement = XPathUtils.getElement("//sld:Rule[sld:Name='" + ruleName
+                                        + "']/sld:MinScaleDenominator",
+                                documentElement,
+                                SLDImporter.NSCONTEXT);
 
-                        if (min.doubleValue() > 0) {
-                            if (totalMin == null) {
-                                totalMin = min;
-                            } else if (totalMin > 0) {
-                                if (!totalMin.equals(min)) {
-                                    totalMin = -1.0;
+                        if (minElement != null) {
+                            final Double min = new Double(minElement.getTextContent());
+
+                            if (min.doubleValue() > 0) {
+                                if (totalMin == null) {
+                                    totalMin = min;
+                                } else if (totalMin > 0) {
+                                    if (!totalMin.equals(min)) {
+                                        totalMin = -1.0;
+                                    }
                                 }
                             }
+                        } else {
+                            totalMin = -1.0;
                         }
-                    } else {
-                        totalMin = -1.0;
                     }
                 } catch (XPathExpressionException ex) {
                     logger.warn("XPath exception", ex);
                 }
             }
-            BasicStyle bs = SLDImporter.getBasicStyle(ruleName, doc);
 
-            // Do not convert a Style without a fill and line to a basic style
-            if ((bs != null) && !bs.isRenderingFill() && !bs.isRenderingLine()) {
-                bs = null;
+            if (firstStyle || !colorStyles.contains(ruleName)) {
+                firstStyle = false;
+                BasicStyle bs = SLDImporter.getBasicStyle(ruleName, doc);
+
+                // Do not convert a Style without a fill and line to a basic style
+                if ((bs != null) && !bs.isRenderingFill() && !bs.isRenderingLine()) {
+                    bs = null;
+                }
+                setStyle(
+                    layer,
+                    (cts != null) ? null : bs,
+                    SLDImporter.getVertexStyle(ruleName, doc),
+                    SLDImporter.getLabelStyle(ruleName, doc),
+                    cts,
+                    SLDImporter.getBasicStyle("ColorThemingDefaultValue", doc));
             }
-
-            setStyle(
-                layer,
-                (cts != null) ? null : bs,
-                SLDImporter.getVertexStyle(ruleName, doc),
-                SLDImporter.getLabelStyle(ruleName, doc),
-                cts);
         }
 
         // The scale can be used, if every rule have the same scale
@@ -360,20 +403,22 @@ public class JumpSLDEditor implements StyleDialogInterface {
         } else {
             featureList = new ArrayList<FeatureServiceFeature>();
         }
-        Map props;
+        List props;
         boolean useFeature = true;
 
-        if (firstFeature != null) {
-            props = firstFeature.getProperties();
-        } else {
-            props = featureService.getFeatureServiceAttributes();
+        if (service != null) {
+            props = featureService.getOrderedFeatureServiceAttributes();
             useFeature = false;
+        } else {
+            props = new ArrayList(firstFeature.getProperties().entrySet());
         }
 
         AttributeType type;
         geomProperty = "GEOM";
-        for (final Object entry : props.entrySet()) {
+        for (final Object entry : props) {
+            String name;
             if (useFeature) {
+                name = ((Map.Entry)entry).getKey().toString();
                 if (((Map.Entry)entry).getValue() instanceof Geometry) {
                     type = AttributeType.GEOMETRY;
                     geomProperty = (String)((Map.Entry)entry).getKey();
@@ -395,11 +440,13 @@ public class JumpSLDEditor implements StyleDialogInterface {
                     type = AttributeType.OBJECT;
                 }
             } else {
-                final FeatureServiceAttribute attr = (FeatureServiceAttribute)((Map.Entry)entry).getValue();
+                final FeatureServiceAttribute attr = (FeatureServiceAttribute)
+                    featureService.getFeatureServiceAttributes().get(entry);
+                name = (String)entry;
 
                 if (attr.isGeometry()) {
                     type = AttributeType.GEOMETRY;
-                    geomProperty = (String)((Map.Entry)entry).getKey();
+                    geomProperty = name;
                 } else if (attr.getType().equals(String.valueOf(Types.CHAR))
                             || attr.getType().equals(String.valueOf(Types.VARCHAR))
                             || attr.getType().equals(String.valueOf(Types.LONGVARCHAR))) {
@@ -422,7 +469,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
                 }
             }
 
-            featureSchema.addAttribute(((Map.Entry)entry).getKey().toString(), type);
+            featureSchema.addAttribute(name, type);
         }
         final List<Feature> jumpFeatures = new LinkedList<Feature>();
         for (final FeatureServiceFeature feature : featureList) {
@@ -589,7 +636,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
         }
         CidsScalePanel.mappingComponent = mappingComponent;
         if (configTabs.contains("Massstab")) {
-            stylePanels.add(new CidsScalePanel(layer, mappingComponent));
+            stylePanels.add(new CidsScalePanel(layer, mappingComponent, service));
         }
 
         if (configTabs.contains("Thematische Farbgebung")) {
@@ -654,7 +701,9 @@ public class JumpSLDEditor implements StyleDialogInterface {
                             final StylePanel stylePanel = i.next();
                             stylePanel.updateStyles();
                         }
-                        panel.setSLDString(exportSLD());
+                        if (tabbedPane.getSelectedComponent() instanceof SLDDefinitionPanel) {
+                            panel.setSLDString(exportSLD());
+                        }
                     }
                 });
         }
@@ -774,6 +823,38 @@ public class JumpSLDEditor implements StyleDialogInterface {
                     }
                 }
 
+                if (service instanceof H2FeatureService) {
+                    final H2FeatureService sffs = (H2FeatureService)service;
+
+                    if (sffs.isTableNotFound() && (allgemein != null)) {
+                        layer.getLayerManager().deferFiringEvents(new Runnable() {
+                            @Override
+                            public void run() {
+                                String uriAsString = allgemein.getSource();
+
+                                try {
+                                    URI uri = new URI(uriAsString);
+                                    File f = new File(uri);
+
+                                    if (!f.exists()) {
+                                        JOptionPane.showMessageDialog(allgemein,
+                                                NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().fileNotFound.message", uriAsString),
+                                                NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().fileNotFound.title"),
+                                                JOptionPane.ERROR_MESSAGE);
+                                        return;
+                                    }
+                                    sffs.createFromShapeFile(uri);
+                                } catch (Exception e)  {
+                                    logger.error("Invalid shape file path", e);
+                                    JOptionPane.showMessageDialog(allgemein,
+                                            NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().invalidUri.message", uriAsString),
+                                            NbBundle.getMessage(JumpSLDEditor.class, "JumpSLDEditor.createResultTask().invalidUri.title"),
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+                        });
+                    }
+                }
 
                 allgemein.syncServiceWithModel();
                 if (queryPanel != null) {
@@ -788,7 +869,7 @@ public class JumpSLDEditor implements StyleDialogInterface {
                         sld = exportSLD();
                     }
                     service.setSLDInputStream(sld);
-                    service.refreshFeatures();
+                    service.retrieve(true);
                 }
             };
     }

@@ -24,6 +24,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DragSource;
 
+import java.io.File;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,15 +37,18 @@ import javax.activation.DataHandler;
 
 import javax.swing.DropMode;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JTable;
 import javax.swing.TransferHandler;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableModel;
 
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.DocumentFeatureService;
 import de.cismet.cismap.commons.featureservice.FeatureServiceAttribute;
+import de.cismet.cismap.commons.featureservice.H2FeatureService;
 import de.cismet.cismap.commons.featureservice.ShapeFileFeatureService;
 import de.cismet.cismap.commons.featureservice.WebFeatureService;
 
@@ -61,12 +66,13 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
 
     //~ Instance fields --------------------------------------------------------
 
-    private AbstractFeatureService service;
-    private AttrributeTableModel model;
-    private TableRowTransferHandler transferHandler = new TableRowTransferHandler();
+    private final AbstractFeatureService service;
+    private final AttrributeTableModel model;
+    private final TableRowTransferHandler transferHandler = new TableRowTransferHandler();
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.jdesktop.swingx.JXTable attributeTable;
+    private javax.swing.JButton butDataSource;
     private javax.swing.JCheckBox cbSelectable;
     private javax.swing.JLabel labAttributes;
     private javax.swing.JLabel lblName;
@@ -90,6 +96,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         txtName.setText(service.getName());
         cbSelectable.setSelected(service.isSelectable());
         txtSource.setEditable(false);
+        butDataSource.setVisible(false);
 
         if (service instanceof DocumentFeatureService) {
             final String source = ((DocumentFeatureService)service).getDocumentURI().toString();
@@ -105,6 +112,14 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         if (service instanceof ShapeFileFeatureService) {
             if (((ShapeFileFeatureService)service).isFileNotFound()) {
                 txtSource.setEditable(true);
+                butDataSource.setVisible(true);
+            }
+        } else if (service instanceof H2FeatureService) {
+            if (((H2FeatureService)service).isTableNotFound()) {
+                txtSource.setEditable(true);
+                txtSource.setVisible(true);
+                lblSource.setVisible(true);
+                butDataSource.setVisible(true);
             }
         }
 
@@ -135,11 +150,13 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         labAttributes = new javax.swing.JLabel();
         lblSelectable = new javax.swing.JLabel();
         cbSelectable = new javax.swing.JCheckBox();
+        butDataSource = new javax.swing.JButton();
 
         setLayout(new java.awt.GridBagLayout());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
@@ -151,6 +168,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 5);
         add(lblName, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -168,26 +186,18 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(15, 15, 5, 5);
         add(lblSource, gridBagConstraints);
 
         scrAttributeTable.setMinimumSize(new java.awt.Dimension(302, 282));
         scrAttributeTable.setPreferredSize(new java.awt.Dimension(402, 282));
-
-        attributeTable.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][] {
-                    { null, null, null, null },
-                    { null, null, null, null },
-                    { null, null, null, null },
-                    { null, null, null, null }
-                },
-                new String[] { "Title 1", "Title 2", "Title 3", "Title 4" }));
         scrAttributeTable.setViewportView(attributeTable);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 15);
@@ -210,6 +220,7 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(5, 15, 5, 5);
         add(lblSelectable, gridBagConstraints);
 
@@ -222,11 +233,64 @@ public class AllgemeinPanel extends javax.swing.JPanel implements StylePanel {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 15);
         add(cbSelectable, gridBagConstraints);
-    }                                                                                                        // </editor-fold>//GEN-END:initComponents
+
+        org.openide.awt.Mnemonics.setLocalizedText(
+            butDataSource,
+            org.openide.util.NbBundle.getMessage(
+                AllgemeinPanel.class,
+                "AllgemeinPanel.butDataSource.text",
+                new Object[] {})); // NOI18N
+        butDataSource.addActionListener(new java.awt.event.ActionListener() {
+
+                @Override
+                public void actionPerformed(final java.awt.event.ActionEvent evt) {
+                    butDataSourceActionPerformed(evt);
+                }
+            });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(15, 5, 5, 15);
+        add(butDataSource, gridBagConstraints);
+    } // </editor-fold>//GEN-END:initComponents
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  evt  DOCUMENT ME!
+     */
+    private void butDataSourceActionPerformed(final java.awt.event.ActionEvent evt) { //GEN-FIRST:event_butDataSourceActionPerformed
+        final JFileChooser fileChooser = new JFileChooser();
+
+        fileChooser.setFileFilter(new FileFilter() {
+
+                @Override
+                public boolean accept(final File f) {
+                    final String fileName = f.getAbsolutePath();
+
+                    return fileName.toUpperCase().endsWith("SHP") || fileName.toUpperCase().endsWith("DBF");
+                }
+
+                @Override
+                public String getDescription() {
+                    return "Shapes";
+                }
+            });
+
+        final int userAction = fileChooser.showDialog(this, "auswählen");
+
+        if (userAction == JFileChooser.APPROVE_OPTION) {
+            final File selectedFile = fileChooser.getSelectedFile();
+
+            if (selectedFile != null) {
+                txtSource.setText("file://" + selectedFile.getAbsolutePath());
+            }
+        }
+    } //GEN-LAST:event_butDataSourceActionPerformed
 
     @Override
     public String getTitle() {
-        return "Allgemein";
+        return NbBundle.getMessage(AllgemeinPanel.class, "AllgemeinPanel.getTitle()");
     }
 
     @Override
