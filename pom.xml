@@ -18,6 +18,12 @@
     </properties>
     <name>${names.jump-sld-editor}</name>
     
+    <scm>
+        <connection>https://github.com/cismet/cismap-sld-styler-jump.git</connection>
+        <developerConnection>scm:git:git@github.com:cismet/cismap-sld-styler-jump.git</developerConnection>
+        <url>https://github.com/cismet/cismap-sld-styler-jump</url>
+    </scm>
+
     <description>!!! description pending !!!</description>
     <licenses>
         <license>
