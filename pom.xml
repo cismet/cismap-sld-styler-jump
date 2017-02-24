@@ -64,7 +64,57 @@
                 <artifactId>cismap-plugin</artifactId>
                 <version>5.0-SNAPSHOT</version>
             </dependency>
+            
+            <dependency>
+                <groupId>de.cismet.commons</groupId>
+                <artifactId>cismet-gui-commons</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <scope>compile</scope>
+                <type>jar</type>
+            </dependency>
+            
+            <!--
+                No official aritifact for 'jump-pilot' exists!
+                See also https://sourceforge.net/p/jump-pilot/mailman/message/28910076/
+            -->
+            <dependency>
+                <groupId>de.cismet.custom</groupId>
+                <artifactId>cismet-JUMP</artifactId>
+                <version>1.5.2</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.media</groupId>
+                        <artifactId>jai_codec</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>xml-apis</groupId>
+                        <artifactId>xmlParserAPIs</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.jdom</groupId>
+                        <artifactId>jdom</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
             <!-- END: managed cids-dependencies -->    
+            
+            <!--
+                Require upper bound dependencies error for batik:batik-dom:1.6
+                from de.cismet.custom:cismet-JUMP:1.5.2 for
+                org.deegree:deegree-core-style:3.2.3
+            -->
+            <dependency>
+                <groupId>batik</groupId>
+                <artifactId>batik-dom</artifactId>
+                <version>1.6-1</version>
+                <scope>compile</scope>
+                <type>jar</type>
+            </dependency>
+            
         </dependencies>
     </dependencyManagement>
 
@@ -82,39 +132,79 @@
             <groupId>de.cismet.cismap</groupId>
             <artifactId>cismap-plugin</artifactId>
         </dependency>
-        <!-- END: cids-dependencies -->
-
-        <!--
-            No official aritifact for 'jump-pilot' exists!
-            See also https://sourceforge.net/p/jump-pilot/mailman/message/28910076/
-        -->
+        <dependency>
+            <groupId>de.cismet.commons</groupId>
+            <artifactId>cismet-gui-commons</artifactId>
+        </dependency>
         <dependency>
             <groupId>de.cismet.custom</groupId>
             <artifactId>cismet-JUMP</artifactId>
-            <version>1.5.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.media</groupId>
-                    <artifactId>jai_codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>xml-apis</groupId>
-                    <artifactId>xmlParserAPIs</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.jdom</groupId>
-                    <artifactId>jdom</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
+        <!-- END: cids-dependencies -->
         
+        <!-- BEGIN:  managed dependencies -->
+        <dependency>
+            <groupId>org.jdom</groupId>
+            <artifactId>jdom-legacy</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.swinglabs</groupId>
+            <artifactId>swingx</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>    
+        <!-- END:  managed dependencies -->
+
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util</artifactId>
+            <version>RELEASE701</version>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-activation_1.1_spec</artifactId>
+            <version>1.1</version>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>       
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-awt</artifactId>
+            <version>RELEASE701</version>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>de.cismet.custom</groupId>
+            <artifactId>beansbinding</artifactId>
+            <version>5.0-SNAPSHOT</version>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
     </dependencies>
-    
-    
+
     <build>
         <!--
             CAUTION ! Ugly Winning bei der Namens-Auswahl !!! siehe Slack =>
