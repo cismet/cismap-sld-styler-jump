@@ -28,7 +28,7 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/switchonproject/cismap-sld-styler-jump/issues</url>
+        <url>https://github.com/cismet/cismap-sld-styler-jump/issues</url>
     </issueManagement>
     
     <ciManagement>
