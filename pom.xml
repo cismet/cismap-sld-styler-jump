@@ -76,6 +76,8 @@
             <!--
                 No official aritifact for 'jump-pilot' exists!
                 See also https://sourceforge.net/p/jump-pilot/mailman/message/28910076/
+                
+                cismet-jump is based on https://github.com/PieceMaker/OpenJUMP
             -->
             <dependency>
                 <groupId>de.cismet.custom</groupId>
