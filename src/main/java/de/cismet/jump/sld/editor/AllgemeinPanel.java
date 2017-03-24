@@ -13,8 +13,6 @@ package de.cismet.jump.sld.editor;
 
 import com.vividsolutions.jump.workbench.ui.style.StylePanel;
 
-import de.fho.jump.pirol.ui.panels.NewAttributePanel;
-
 import org.apache.log4j.Logger;
 
 import org.openide.util.NbBundle;
