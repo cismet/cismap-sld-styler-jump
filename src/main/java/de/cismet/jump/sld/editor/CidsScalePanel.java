@@ -18,6 +18,7 @@ import org.openide.util.NbBundle;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 
@@ -65,12 +66,15 @@ public class CidsScalePanel extends ScaleStylePanel {
         super.currentScaleTextField.setVisible(false);
         super.spacerPanelBelowCurrentScale.setVisible(false);
         super.showAtThisScaleButton.setVisible(false);
+        super.hideAboveCurrentScaleButton.setVisible(false);
+        super.hideBelowCurrentScaleButton.setVisible(false);
 
         if (service instanceof CidsLayer) {
             final CidsLayer cidsLayer = (CidsLayer)service;
+            final Double maxScale = cidsLayer.getMaxScale();
             final Double maxArea = cidsLayer.getMaxArea();
 
-            if (maxArea != null) {
+            if ((maxArea != null) || (maxScale != null)) {
                 final GridBagConstraints serverScale = new GridBagConstraints();
                 serverScale.gridx = 1;
                 serverScale.gridy = 2;
@@ -86,27 +90,155 @@ public class CidsScalePanel extends ScaleStylePanel {
                 chBox.setEnabled(false);
                 chBox.setSelected(true);
 
-                final JPanel minPanel = new JPanel(new GridLayout(1, 2));
+                final JPanel minPanel = new JPanel(new GridBagLayout());
                 final JLabel minScaleLab = new JLabel(NbBundle.getMessage(
                             CidsScalePanel.class,
                             "CidsScalePanel.CidsScalePanel().minScale"));
-                minPanel.add(minScaleLab);
+                final JLabel oneMinLab = new JLabel("1:");
+                minScaleLab.setPreferredSize(new Dimension(158, 20));
+                minPanel.add(
+                    minScaleLab,
+                    new GridBagConstraints(
+                        0,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        GridBagConstraints.NORTHWEST,
+                        GridBagConstraints.NONE,
+                        new Insets(5, 10, 0, 0),
+                        0,
+                        0));
+                minPanel.add(
+                    oneMinLab,
+                    new GridBagConstraints(
+                        1,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        GridBagConstraints.NORTHEAST,
+                        GridBagConstraints.NONE,
+                        new Insets(5, 5, 0, 0),
+                        0,
+                        0));
                 final Dimension mapDimension = mappingComponent.getSize(null);
                 final double mapSizeInSqrMeter = mapDimension.getWidth() * mapDimension.getHeight()
                             * Math.pow(METER_PER_INCH / ASSUMED_DPI, 2);
-                final JTextField minScale = new JTextField("1:"
-                                + (long)(Math.sqrt(maxArea.longValue() / mapSizeInSqrMeter)));
-                minScale.setEnabled(false);
-                minPanel.add(minScale);
+                double finalScale = -1;
 
-                final JPanel maxPanel = new JPanel(new GridLayout(1, 2));
+                if (maxArea != null) {
+                    finalScale = Math.sqrt(maxArea.longValue() / mapSizeInSqrMeter);
+                }
+
+                if (maxScale != null) {
+                    if (finalScale != -1) {
+                        finalScale = Math.min(finalScale, maxScale);
+                    } else {
+                        finalScale = maxScale;
+                    }
+                }
+
+                final JTextField minScale = new JTextField("1:"
+                                + (long)finalScale);
+                minScale.setEnabled(false);
+                minScale.setPreferredSize(new Dimension(82, 20));
+                minPanel.add(
+                    minScale,
+                    new GridBagConstraints(
+                        2,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        GridBagConstraints.NORTHWEST,
+                        GridBagConstraints.NONE,
+                        new Insets(2, 5, 0, 0),
+                        0,
+                        0));
+                minPanel.add(
+                    new JPanel(),
+                    new GridBagConstraints(
+                        3,
+                        0,
+                        1,
+                        1,
+                        1,
+                        0,
+                        GridBagConstraints.NORTHWEST,
+                        GridBagConstraints.NONE,
+                        new Insets(5, 10, 0, 0),
+                        0,
+                        0));
+
+                final JPanel maxPanel = new JPanel(new GridBagLayout());
                 final JLabel maxScaleLab = new JLabel(NbBundle.getMessage(
                             CidsScalePanel.class,
                             "CidsScalePanel.CidsScalePanel().maxScale"));
-                maxPanel.add(maxScaleLab);
-                final JTextField maxScale = new JTextField("1:1");
-                maxScale.setEnabled(false);
-                maxPanel.add(maxScale);
+                final JLabel oneLab = new JLabel("1:");
+                maxScaleLab.setPreferredSize(new Dimension(158, 20));
+                maxPanel.add(
+                    maxScaleLab,
+                    new GridBagConstraints(
+                        0,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        GridBagConstraints.NORTHWEST,
+                        GridBagConstraints.NONE,
+                        new Insets(5, 10, 0, 0),
+                        0,
+                        0));
+                maxPanel.add(
+                    oneLab,
+                    new GridBagConstraints(
+                        1,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        GridBagConstraints.NORTHEAST,
+                        GridBagConstraints.NONE,
+                        new Insets(5, 5, 0, 0),
+                        0,
+                        0));
+                final JTextField txtMaxScale = new JTextField("1");
+                txtMaxScale.setEnabled(false);
+                txtMaxScale.setPreferredSize(new Dimension(82, 20));
+                maxPanel.add(
+                    txtMaxScale,
+                    new GridBagConstraints(
+                        2,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        GridBagConstraints.NORTHWEST,
+                        GridBagConstraints.NONE,
+                        new Insets(2, 5, 0, 0),
+                        0,
+                        0));
+                maxPanel.add(
+                    new JPanel(),
+                    new GridBagConstraints(
+                        3,
+                        0,
+                        1,
+                        1,
+                        1,
+                        0,
+                        GridBagConstraints.NORTHWEST,
+                        GridBagConstraints.NONE,
+                        new Insets(5, 10, 0, 0),
+                        0,
+                        0));
 
                 pan.add(chBox);
                 pan.add(minPanel);
