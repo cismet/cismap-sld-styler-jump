@@ -82,7 +82,7 @@
             <dependency>
                 <groupId>de.cismet.custom</groupId>
                 <artifactId>cismet-JUMP</artifactId>
-                <version>1.5.2</version>
+                <version>1.5.4</version>
                 <exclusions>
                     <exclusion>
                         <groupId>junit</groupId>
