@@ -30,6 +30,7 @@ import de.cismet.cismap.commons.featureservice.FeatureServiceUtilities;
 import de.cismet.cismap.commons.featureservice.WebFeatureService;
 import de.cismet.cismap.commons.wfs.WFSFacade;
 import de.cismet.cismap.commons.wfs.capabilities.WFSCapabilities;
+import de.cismet.connectioncontext.ConnectionContext;
 
 /**
  * Uses the query search to create a query defination for feature services.
@@ -70,7 +71,7 @@ public class QuerySearchDialog extends javax.swing.JDialog {
                 new String[] {},
                 new AbstractFeatureService[] { service },
                 new QuerySearchMethod[] { new BuildQuerySearchMethod(textArea) });
-
+        querySearch1.initWithConnectionContext(ConnectionContext.createDummy());
         initComponents();
     }
 
