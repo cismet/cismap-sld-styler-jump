@@ -3,12 +3,12 @@
     <parent>
         <groupId>de.cismet.cids</groupId>
         <artifactId>cids-parent</artifactId>
-        <version>6.0</version>
+        <version>7.0</version>
     </parent>
   
     <groupId>de.cismet</groupId>
     <artifactId>Jump-sld-editor</artifactId>
-    <version>6.0.1</version>
+    <version>7.0</version>
     <packaging>jar</packaging>
     
     <properties>
@@ -23,7 +23,7 @@
         <connection>https://github.com/cismet/cismap-sld-styler-jump.git</connection>
         <developerConnection>scm:git:git@github.com:cismet/cismap-sld-styler-jump.git</developerConnection>
         <url>https://github.com/cismet/cismap-sld-styler-jump</url>
-        <tag>v6.0.1</tag>
+        <tag>v7.0</tag>
     </scm>
 
     <issueManagement>
@@ -42,7 +42,7 @@
             <dependency>
                 <groupId>de.cismet</groupId>
                 <artifactId>cismet-ext-bom</artifactId>
-                <version>6.0</version>
+                <version>7.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -50,31 +50,31 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>6.2.1</version>
+                <version>7.0</version>
             </dependency>
 
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismap-commons</artifactId>
-                <version>6.0.4</version>
+                <version>7.0</version>
             </dependency>
             
             <dependency>
                 <groupId>de.cismet.cids.navigator</groupId>
                 <artifactId>cids-navigator</artifactId>
-                <version>6.2.5</version>
+                <version>7.0</version>
             </dependency>
             
             <dependency>
                 <groupId>de.cismet.cismap</groupId>
                 <artifactId>cismap-plugin</artifactId>
-                <version>6.1.1</version>
+                <version>7.0</version>
             </dependency>
             
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-gui-commons</artifactId>
-                <version>6.1.2</version>
+                <version>7.0</version>
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
@@ -87,8 +87,8 @@
             -->
             <dependency>
                 <groupId>de.cismet.custom</groupId>
-                <artifactId>cismet-JUMP</artifactId>
-                <version>1.5.4</version>
+                <artifactId>cismet-JUMP1.5</artifactId>
+                <version>7.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>junit</groupId>
@@ -125,8 +125,8 @@
 
             <dependency>
                 <groupId>de.cismet.custom</groupId>
-                <artifactId>cismet-deegree</artifactId>
-                <version>2.3.8</version>
+                <artifactId>cismet-deegree2.3</artifactId>
+                <version>7.0</version>
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
@@ -137,7 +137,7 @@
         <!-- BEGIN: cids-dependencies -->
         <dependency>
             <groupId>de.cismet.custom</groupId>
-            <artifactId>cismet-deegree</artifactId>
+            <artifactId>cismet-deegree2.3</artifactId>
         </dependency>
         <dependency>
             <groupId>de.cismet.commons</groupId>
@@ -161,7 +161,7 @@
         </dependency>
         <dependency>
             <groupId>de.cismet.custom</groupId>
-            <artifactId>cismet-JUMP</artifactId>
+            <artifactId>cismet-JUMP1.5</artifactId>
         </dependency>
         <!-- END: cids-dependencies -->
         
