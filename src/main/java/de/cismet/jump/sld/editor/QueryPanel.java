@@ -27,6 +27,7 @@ import java.io.StringReader;
 import de.cismet.cismap.commons.featureservice.AbstractFeatureService;
 import de.cismet.cismap.commons.featureservice.FeatureServiceUtilities;
 import de.cismet.cismap.commons.featureservice.WebFeatureService;
+import de.cismet.cismap.commons.util.SelectionManager;
 
 import de.cismet.tools.gui.StaticSwingTools;
 
@@ -178,6 +179,14 @@ public class QueryPanel extends javax.swing.JPanel implements StylePanel {
                 LOG.error("Query is not a valid xml document", e);
             }
         }
+        if (((service.getQuery() == null) && (taQuery.getText() != null) && !taQuery.getText().equals(""))
+                    || ((service.getQuery() != null) && (taQuery.getText() != null)
+                        && !service.getQuery().equals(taQuery.getText()))) {
+            // remove the selection of the current service to avoid that a feature is still selected, that does not
+            // match the definition query.
+            SelectionManager.getInstance().clearSelection(service);
+        }
+
         service.setQuery(taQuery.getText());
     }
 
