@@ -56,7 +56,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismap-commons</artifactId>
-                <version>9.0-SNAPSHOT</version>
+                <version>9.0</version>
             </dependency>
             
             <dependency>
