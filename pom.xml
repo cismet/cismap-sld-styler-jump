@@ -8,7 +8,7 @@
   
     <groupId>de.cismet</groupId>
     <artifactId>Jump-sld-editor</artifactId>
-    <version>7.1-SNAPSHOT</version>
+    <version>9.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <properties>
